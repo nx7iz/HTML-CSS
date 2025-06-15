@@ -10,23 +10,41 @@
     }
 
     .search-bar {
-      font-size: 20px;
-      margin-left: 12px;
+      display: block;
     }
 
     .video-title {
       width: 300px;
     }
+
+    .video-preview {
+      width: 300px;
+      display: inline-block;
+      vertical-align: top;
+      margin-right: 15px;
+    }
+
   </style>
 </head>
 
 <body>
   <input class="search-bar" type="text" placeholder="Search" name="" id="">
-  <img class="thumbnail" src="images/pic 01.webp" alt="">
-  <p class="video-title">Talking Tech and AI with Google CEO Sundar Pichai!</p>
-  <p class="video-author">Marques Brownlee</p>
-  <p class="video-stats">3.4M views &#183 6 months ago</p>
 
+  <div class="video-preview">
+    <img class="thumbnail" src="images/pic 01.webp" alt="">
+    <p class="video-title">Talking Tech and AI with Google CEO Sundar Pichai!</p>
+    <p class="video-author">Marques Brownlee</p>
+    <p class="video-stats">3.4M views &#183 6 months ago</p>
+
+  </div>
+
+  <div class="video-preview">
+    <img class="thumbnail" src="images/wallpaper 01.jpg" alt="">
+    <p class="video-title">Japanese anime wallpaper looking absolutely stunning!</p>
+    <p class="video-author">Azekawa</p>
+    <p class="video-stats">2.8M views &#183 2 months ago</p>
+
+  </div>
 </body>
 
 </html>
