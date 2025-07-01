@@ -9,25 +9,42 @@
       margin-bottom: 0;
     }
 
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 220px 220px 220px;
+      column-gap: 20px;
+      align-items: center;
+    }
+
     .profile {
       width: 200px;
       box-shadow: 0 0px 5px rgba(0, 0, 0, 0.3);
       vertical-align: top;
       margin-right: 15px;
-      display: inline-block;
+    }
+
+    .mutual-friend-row {
+      display: grid;
+      grid-template-columns: 35px 1fr;
+      align-items: center;
+      margin-left: 8px;
+      margin-bottom: 10px;
+
+
     }
 
     .profile-picture {
       width: 200px;
-      height: 200px;
+      height: 220px;
       object-fit: cover;
-      display: block;
+      margin-bottom: 12px;
     }
 
     .name {
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 7px;
+      margin-bottom: 5px;
+      margin-left: 8px;
     }
 
     .mutual-friend-picture {
@@ -35,73 +52,59 @@
       height: 30px;
       object-fit: cover;
       border-radius: 40px;
-      display: inline-block;
+      vertical-align: middle;
+      margin-right: 4px;
     }
 
-    .mutual-friend-status {
-      font-size: 15px;
-      display: inline-block;
-      vertical-align: top;
-      margin-top: 6px;
-      margin-left: 2px;
+    .mutual-friends {
       color: rgb(137, 137, 137);
     }
 
     .add-friend-button {
-      font-size: 15px;
-      width: 110px;
-      background-color: rgb(30, 125, 249);
+      background-color: rgb(24, 119, 242);
       color: white;
-
       border: none;
-      border-radius: 4px;
-
-      padding-top: 9px;
-      padding-bottom: 9px;
-      margin-top: 4px;
-      display: block;
-
-      box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-    }
-
-    .user-info {
-      border: none;
-      width: 192px;
-      padding-top: 12px;
+      padding-top: 10px;
       padding-bottom: 10px;
-      padding-left: 8px;
-      box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3);
+      padding-left: 20px;
+      padding-right: 20px;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-left: 8px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 
 <body>
-  <div class="profile">
-    <img class="profile-picture" src="../../images/wallpaper 05.jpg" alt="">
-    <div class="user-info">
+  <div class="profile-grid">
+    <div class="profile">
+      <img class="profile-picture" src="../../images/wallpaper 05.jpg" alt="">
       <p class="name">Ruxus</p>
-      <img class="mutual-friend-picture" src="../../images/Stork.jpg" alt="">
-      <p class="mutual-friend-status">2 mutual friends</p>
+      <div class="mutual-friend-row">
+        <img class="mutual-friend-picture" src="../../images/Stork.jpg" alt="">
+        <p class="mutual-friends">2 mutual friends</p>
+      </div>
       <button class="add-friend-button">Add Friend</button>
     </div>
-  </div>
 
-  <div class="profile">
-    <img class="profile-picture" src="../../images/Stork.jpg" alt="">
-    <div class="user-info">
+    <div class="profile">
+      <img class="profile-picture" src="../../images/Stork.jpg" alt="">
       <p class="name">Stark</p>
-      <img class="mutual-friend-picture" src="../../images/wallpaper 01.jpg" alt="">
-      <p class="mutual-friend-status">5 mutual friends</p>
+      <div class="mutual-friend-row">
+        <img class="mutual-friend-picture" src="../../images/wallpaper 01.jpg" alt="">
+        <p class="mutual-friends">5 mutual friends</p>
+      </div>
       <button class="add-friend-button">Add Friend</button>
     </div>
-  </div>
 
-  <div class="profile">
-    <img class="profile-picture" src="../../images/Himmel.jpg" alt="">
-    <div class="user-info">
+    <div class="profile">
+      <img class="profile-picture" src="../../images/Himmel.jpg" alt="">
       <p class="name">Himmel</p>
-      <img class="mutual-friend-picture" src="../../images/wallpaper 03.jpg" alt="">
-      <p class="mutual-friend-status">9 mutual friends</p>
+      <div class="mutual-friend-row">
+        <img class="mutual-friend-picture" src="../../images/wallpaper 03.jpg" alt="">
+        <p class="mutual-friends">9 mutual friends</p>
+      </div>
       <button class="add-friend-button">Add Friend</button>
     </div>
   </div>
