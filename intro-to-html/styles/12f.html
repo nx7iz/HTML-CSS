@@ -3,46 +3,39 @@
 
 <head>
   <style>
-    .design {
-      display: flex;
-      background-color: rgb(136, 69, 199);
-      height: 47px;
-      align-items: center;
-    }
-
-    .home-text {
-      color: white;
+    div {
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
+    }
+
+    .header {
+      background-color: rgb(120, 82, 178);
+      color: white;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+
+    }
+
+    .home-link {
       font-weight: bold;
-
-      width: 140px;
       margin-left: 12px;
-
     }
 
-    .search {
-      flex: 1;
-    }
-
-    .download {
-      flex: 1;
-    }
-
-    .search-box {
-      width: 450px;
-      border-radius: 25px;
+    .text-box {
+      width: 500px;
       border: none;
-
+      margin-top: 12px;
+      margin-bottom: 12px;
+      height: 30px;
       padding-left: 15px;
-      padding-top: 7px;
-      padding-bottom: 7px;
-
+      border-radius: 15px;
     }
 
     .download-button {
-      background-color: rgb(136, 69, 199);
+      background-color: rgb(120, 82, 178);
       color: white;
+      font-size: 16px;
 
       margin-right: 6px;
 
@@ -51,21 +44,19 @@
       border-style: solid;
       border-radius: 2px;
 
-      width: 90px;
-
-      padding-top: 7px;
-      padding-bottom: 7px;
-
-
+      padding-left: 15px;
+      padding-right: 15px;
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
   </style>
 </head>
 
 <body>
-  <div class="design">
-    <div class="home-text">Home</div>
-    <div class="search"><input class="search-box" type="Search" placeholder="Search"></div>
-    <div class="downlaod"><button class="download-button">Downlaod</button></div>
+  <div class="header">
+    <div class="home-link">Home</div>
+    <input class="text-box" type="Search" placeholder="Search">
+    <button class="download-button">Downlaod</button>
   </div>
 </body>
 

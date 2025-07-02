@@ -5,17 +5,57 @@
   flex-direction: row;
   justify-content: space-between;
 }
+
 .left-section {
-  background-color: lightblue;
-  width: 150px;
+  display: flex;
+  align-items: center;
+}
+
+.hamburger-menu {
+  height: 24px;
+  margin-left: 24px;
+  margin-right: 24px;
+}
+.youtube-logo {
+  height: 20px;
 }
 
 .middle-section {
-  background-color: lightpink;
+  display: flex;
   flex: 1;
   margin-left: 70px;
   margin-right: 35px;
   max-width: 500px;
+  align-items: center;
+}
+
+.search-button {
+  height: 40px;
+  width: 60px;
+  background-color: rgb(242, 242, 242);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(194, 194, 194);
+}
+
+.voice-search-button {
+  height: 40px;
+  width: 40px;
+}
+.search-bar {
+  flex: 1;
+  height: 35px;
+  padding-left: 10px;
+  font-size: 16px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 2px;
+  border-color: rgb(194, 194, 194);
+  box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.05);
+}
+.search-bar::placeholder {
+  font-family: Roboto, Arial;
+  font-size: 16px;
 }
 
 .right-section {
@@ -23,3 +63,7 @@
   width: 200px;
 }
 
+.search-icon {
+  height: 25px;
+  margin-top: 4px;
+}
