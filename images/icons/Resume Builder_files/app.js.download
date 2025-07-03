@@ -1,0 +1,2945 @@
+var trackingApiTimer;
+var resourcePromise = undefined;
+var configPromise = undefined;
+var createGuestUserTimer;
+var AuthCookieName = "SigninAuth";
+var AuthCoreCookieName = "SigninAuth_CORE";
+var ISOCookieName = 'sep';
+var reqAccountsGuestUserCreation = false;
+var isHandlePostPageLoadCalled = false;
+var isAccUserCalled = false;
+var postGuestCreatedCalled = false;
+var postGuestUserTimer;
+var isRedirectDone = false;
+var longLoaderAnimation = null;
+var isLongLoaderComplete = false;
+var loadCookieConsentScript = false;
+var skipISO = window.location.href.includes('skipiso');
+window.BLDR = window.BLDR || {};
+window.globalCompVars = window.globalCompVars || {};
+window.BLDR.countriesToBeOnTop = window.BLDR.countriesToBeOnTop || [];
+window.BLDR.Localization = {};
+window.BLDR.imagePath = "/assets/builder";
+window.BLDR.isCVOnRGN = false;
+window.BLDR.isPremiumUser = false;
+window.BLDR.isRGNCO = false;
+window.BLDR.useContentAPI = false;
+window.BLDR.VisitorApiSetting = {};
+window.BLDR.PortalSettings = {};
+window.BLDR.Skins = [];
+window.BLDR.skinHtmls = [];
+window.BLDR.States = {};
+window.BLDR.Countries = [];
+window.BLDR.Strengths = [];
+window.BLDR.UserExperiments = {};
+window.BLDR.PortalExperiments = {};
+window.BLDR.ExperimentsLocalization = {};
+// BLDR.Portal = BLDR.Portal || getPortalInfo();
+window.BLDR.getDomainObject = getDomainObject;
+BLDR.Paths.ResourcePath = getResourceUrl();
+BLDR.getQueryString = getQueryString;
+window.BLDR.ReferenceSavedOption = "";
+BLDR.formatCreationDate = false;
+BLDR.Paths.UrlPrefix = "gtwy";
+window.globalCompVars.EnableETEEncryption = false;
+window.globalCompVars.EnableUrlETEEncryption = false;
+BLDR.maxloopCount = 5;
+BLDR.claimCallCounter = 0;
+BLDR.createUserCallCounter = 0;
+BLDR.createUserTimer = undefined;
+BLDR.claimCallTimer = undefined;
+BLDR.loopTimeGapInSec = 5;
+BLDR.pageLoaded = false;
+BLDR.isloggedIn = false;
+BLDR.userId = null;
+BLDR.SkinCdFromPortal = null;
+BLDR.defaultColorCD = null;
+BLDR.SeoSummary = null;
+BLDR.isSeoSummary = false;
+
+BLDR.preventScreenshot = true;
+BLDR.screenshotClass = 'prevent-screenshot';
+BLDR.finalizeTestBed = {
+    active: false,
+    skinCd: "",
+    skinHtm: ""
+};
+// default alignment for signature to the right
+BLDR.setDfltSigRightAlgn = BLDR.isGDE ? true : false;
+//BLDR.defaultSkin = BLDR.Portal.defaultSkin;
+BLDR.countryDetails = { countryCode: "", continentCode: null, isEuropianContinent: false, city: null, state: null, isEEACountry: false, zip: null, ip: "" };
+BLDR.maxAllowedSize = 5;
+BLDR.isLongloaderActive = true;
+BLDR.GCaptchaCookieName = "Invlgn_Count";
+window.globalCompVars.googleRecaptchaSiteKey = "";
+window.BLDR.randomPhotoNumber = Math.random();
+window.BLDR.randomSignNumber = Math.random();
+BLDR.clrForBrightSkins = '#050505';
+BLDR.clrForDarkSkins = '#FFFFFF';
+
+BLDR.Paths.StartPagePath = BLDR.Portal.startPage;
+BLDR.Paths.StartHTSPagePath = BLDR.Portal.startHTSPage;
+
+window.BLDR.dummyTemplateDocument = null;
+window.BLDR.templatesMappingToExprLevel = [{ "ExprLevel": "0 Years", "templates": ["MLC1", "MLM7", "MLF6"] }, { "ExprLevel": "student", "templates": ["MLT6", "MLC1", "MLT7"] }, { "ExprLevel": "0-3 Years", "templates": ["MLT6", "MLC1", "MLT7"] }, { "ExprLevel": "3-5 Years", "templates": ["TML4", "MLT9", "SMP1"] }, { "ExprLevel": "5-10 Years", "templates": ["CBG2", "TML4", "MNG4"] }, { "ExprLevel": "10+ Years", "templates": ["CBG2", "UPT2", "MLT9"] }];
+window.BLDR.updateSkinContent = true;
+window.BLDR.ctSkinChanges = false;
+window.BLDR.SVGComponents = {};
+window.BLDR.useLiteRenderer = true;
+window.BLDR.SkinComponents = {};
+window.BLDR.fireTemplateTaggingEvents = false;
+BLDR.formattingFonts = ["Arimo", "Bodoni MT", "Catamaran", "Georgia", "Hind Madurai", "Lora", "Manrope", "Nunito Sans", "Open Sans", "Roboto", "STIX Two Text", "Tahoma"];
+
+BLDR.parseDocObject = null;
+BLDR.checkStringIsJson = function (anyString) {
+    let value = typeof anyString !== "string" ? JSON.stringify(anyString) : anyString;
+    try {
+        value = JSON.parse(value);
+    } catch { return false; }
+    return typeof value === "object" && value !== null;
+}
+
+BLDR.isBaseRoute = (location.pathname == BLDR.Paths.BasePath ||
+    location.pathname == BLDR.Paths.BasePath + '/' ||
+    location.pathname == BLDR.Paths.BasePath + BLDR.Paths.StartPagePath ||
+    location.pathname == BLDR.Paths.BasePath + BLDR.Paths.StartPagePath + "/" ||
+    location.pathname == BLDR.Paths.BasePath + BLDR.Paths.StartHTSPagePath ||
+    location.pathname == BLDR.Paths.BasePath + BLDR.Paths.StartHTSPagePath + "/");
+
+BLDR.loadSkinFiles = function () {
+    if (BLDR.Skins.length > 0) {
+        handleSkins();
+    }
+    else {
+        var skinTimer = setInterval(function () {
+            if (BLDR.Skins.length > 0) {
+                clearInterval(skinTimer);
+                handleSkins();
+            }
+        }, 100);
+    }
+};
+
+BLDR.loadDummyDocumentImage = function () {
+    let dummyImage = [];
+    if (BLDR.isRG) {
+        dummyImage.push(`${BLDR.CDNHost + BLDR.CDNpathname}/photos/p/in/17/1797ff83-4422-48f4-869d-f04dd73b2a01.jpeg?0.4720211037892692?${BLDR.randomPhotoNumber}`);
+    }
+    else if (BLDR.isCVG) {
+        dummyImage.push(`${BLDR.CDNHost + BLDR.CDNpathname}/photos/p/in/12/120a335d-39ae-4b4f-bdfe-335d9a90bff4.jpeg?0.8869747860223978?${BLDR.randomPhotoNumber}`);
+    }
+    else if (BLDR.isEUPortal) {
+        dummyImage.push(`${BLDR.CDNHost + BLDR.CDNpathname}/photos/p/in/12/120a335d-39ae-4b4f-bdfe-335d9a90bff4.jpeg?0.8869747860223978?${BLDR.randomPhotoNumber}`);
+    };
+    if (dummyImage && dummyImage.length) {
+        BLDR.preload(dummyImage);
+    }
+}
+
+BLDR.getSkinHtml = function (skinName, isAsyncTrue, skinResolve) {
+    var url = BLDR.configServiceBlobUrl + skinName;
+    callAjax(url, 'GET', isAsyncTrue ? true : false, false, false, false, function (data, resolve) {
+        var htmlDoc = BLDR.createHtmlFromString(data);
+        BLDR.skinHtmls[skinName] = htmlDoc;
+        if (resolve) {
+            resolve("");
+        }
+    }, skinResolve);
+};
+
+BLDR.createHtmlFromString = function (htmlString) {
+    var htmlDoc = null;
+    if (htmlString) {
+        var parser = new DOMParser();
+        htmlDoc = parser.parseFromString(htmlString, "text/html");
+    }
+    return htmlDoc;
+};
+
+BLDR.getTemplateFromSkin = function (skin) {
+    var skinCD = skin || BLDR.defaultSkin;
+    var template = BLDR.skinHtmls[skinCD + '.htm'];
+    if (!template) {
+        BLDR.getSkinHtml(skinCD + '.htm', false);
+        template = BLDR.skinHtmls[skinCD + '.htm'];
+        if (!template) {
+            template = BLDR.skinHtmls[BLDR.defaultSkin + '.htm'];
+        }
+    }
+    return template;
+};
+
+BLDR.loadLocalSelectedSkinHtm = function (skinCD) {
+    let skinData = BLDR.finalizeTestBed.skinHtm;
+    var parser = new DOMParser();
+    var htmlDoc = parser.parseFromString(skinData, "text/html");
+    BLDR.skinHtmls[skinCD + '.htm'] = htmlDoc;
+}
+BLDR.loadTemplateFromSkinWithPromise = function (skin) {
+    var skinCD = skin || BLDR.defaultSkin;
+    if (BLDR.finalizeTestBed.active == true && skinCD == BLDR.finalizeTestBed.skinCd) {
+        BLDR.loadLocalSelectedSkinHtm(skinCD);
+    }
+    var getSkinPromise = new Promise(function (resolve, reject) {
+        var template = BLDR.skinHtmls[skinCD + '.htm'];
+        if (!template) {
+            BLDR.getSkinHtml(skinCD + '.htm', true, resolve);
+        }
+        else {
+            resolve("");
+        }
+    });
+    return getSkinPromise;
+};
+
+BLDR.isMultiColumnSkin = function (skinCD) {
+    var isMultiColumn = false;
+    skinCD = skinCD || BLDR.defaultSkin;
+    var container = BLDR.getTemplateFromSkin(skinCD);
+    if (container) {
+        var containerElement = container.querySelectorAll("container");
+        if (containerElement != null && containerElement.length > 0) {
+            isMultiColumn = true;
+        }
+    }
+    return isMultiColumn;
+};
+
+BLDR.isGraphicSkin = function (skinCD) {
+    var isGraphics = false;
+    skinCD = skinCD || BLDR.defaultSkin;
+    var container = BLDR.getTemplateFromSkin(skinCD);
+    if (container) {
+        var containerElement = container.querySelectorAll("#STATIC_SECTION_TOP, #STATIC_SECTION_BOTM");
+        if (containerElement != null && containerElement.length > 0) {
+            isGraphics = true;
+        }
+    }
+    return isGraphics;
+};
+
+BLDR.isUserExist = function () {
+    if (BLDR.UserClaims && BLDR.UserClaims.user_uid) {
+        var url = window.BLDR.Paths.BaseApiUrl + 'users/' + BLDR.UserClaims.user_uid;
+        var xmlhttp;
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.onload = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var user = JSON.parse(xmlhttp.responseText);
+                if (user == null || user == undefined) {
+                    clearAndRedirect("/");
+                }
+            }
+            else if (xmlhttp.readyState == 4 && xmlhttp.status == 400) {
+                clearAndRedirect("/");
+            }
+        };
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send();
+    }
+};
+
+BLDR.isAnyAuthCookieExists = function () {
+    var anyAuthCookieExists = true;
+    if (window.BLDR.readCookie(AuthCoreCookieName) == null && window.BLDR.readCookie(AuthCookieName) == null) {
+        anyAuthCookieExists = false;
+    }
+    return anyAuthCookieExists;
+};
+
+BLDR.getClaims = function (callback, resolve, skipAuthCookieCheck) {
+    var accountTimer = setInterval(function () {
+        if (typeof SIGNIN != 'undefined' && typeof SIGNIN.Accounts != 'undefined') {
+            clearInterval(accountTimer);
+            SIGNIN.Accounts.getClaims().then(function (data) {
+                if (data.claims.user_uid != undefined) {
+                    resolve ? callback(JSON.stringify(data.claims), resolve) : callback(JSON.stringify(data.claims));
+                }
+                else {
+                    BLDR.createGuestUser(resolve);
+                    // if (resolve)
+                    //     resolve('');
+                }
+            });
+        }
+    }, 50);
+    BLDR.claimCallCounter++;
+    clearTimeout(BLDR.claimCallTimer);
+    BLDR.claimCallTimer = setTimeout(function () {
+        BLDR.claimCallCounter = 0;
+    }, BLDR.loopTimeGapInSec * 1000);
+
+    if (BLDR.claimCallCounter > BLDR.maxloopCount) {
+        // redirect to LP.
+        clearAndRedirect("/?forceRedirect=StuckInClaimCall");
+    }
+
+};
+
+BLDR.createGuestUser = function (resolve) {
+    reqAccountsGuestUserCreation = true;
+    clearInterval(createGuestUserTimer);
+    createGuestUserTimer = setInterval(function () { createGuestUser(resolve) }, 200);
+};
+
+BLDR.logOut = function () {
+    if (typeof SIGNIN == "object" && typeof SIGNIN.Accounts.logOut == 'function') {
+        SIGNIN.Accounts.logOut().then(function (data) {
+            BLDR.TrackEvents('left document', {
+                'left link url': BLDR.Paths.DashboardLoginUrl
+            }, BLDR.UserClaims.user_uid, true);
+            clearAndRedirect(BLDR.Paths.DashboardLoginUrl);
+        }, function (error) { console.log("Logout Error: " + error); });
+    }
+};
+
+BLDR.createCookie = function (name, value, days, domain, sameSite) {
+    var expires = "";
+    var _domain = "";
+    var secure = ";secure";
+    var _sameSite = "SameSite=Strict;";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toGMTString();
+    } else
+        expires = "";
+
+    if (domain) {
+        _domain = "; domain=" + domain;
+    }
+    else if (BLDR.Portal.cookieDomain) {
+        _domain = "; domain=" + BLDR.Portal.cookieDomain;
+    }
+    if (sameSite) {
+        _sameSite = "SameSite=" + sameSite + ";";
+    }
+    document.cookie = name + "=" + value + secure + expires + _domain + "; path=/;" + _sameSite;
+};
+
+BLDR.readCookie = function (name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+};
+
+BLDR.delete_cookie = function (name, domain) {
+    var _domain = "";
+    var date = new Date();
+    date.setTime(date.getTime() - 1);
+    var expires = "; expires=" + date.toGMTString();
+    if (domain) {
+        _domain = "; domain=" + domain;
+    }
+    document.cookie = name + "=;" + expires + _domain + "; path=/;";
+};
+
+BLDR.getKeyValFromCookie = function (c_name, key, separator) {
+    var keyVal = "";
+    var c_value = BLDR.readCookie(c_name);
+    if (c_value != null && c_value.length > 0) {
+        var arrkeyval = c_value.split(separator);
+        if (arrkeyval.length > 0 && arrkeyval[0].indexOf(":") != -1) {
+            for (var i in arrkeyval) {
+                if (arrkeyval[i].split(':')[0].trim().indexOf(key) != -1) {
+                    keyVal = arrkeyval[i].split(':')[1].trim();
+                    break;
+                }
+            }
+        }
+    }
+    return keyVal;
+}
+
+function getQueryString(field) {
+    var href = window.location.href;
+    var reg = new RegExp('[?&]' + field + '=([^&#]*)', 'i');
+    var string = reg.exec(href);
+    return string ? string[1] : null;
+};
+
+function getDomainObject() {
+    let hostArray = window.location.host.split('.');
+    domainMain = hostArray.length > 0 ? (hostArray[hostArray.length - 2]).toLowerCase().trim() : "";
+    domainExt = hostArray.length > 0 ? hostArray[hostArray.length - 1].toLowerCase().trim() : "";
+    if (domainExt && domainExt.length > 2) {
+        domainExt = domainExt.split(':')[0];
+    }
+
+    let domainObj = {
+        "domainMain": domainMain,
+        "domainExt": domainExt,
+        "domainDefExt": "com",
+        "cdnsubdomain": hostArray[0] == "local-sep" ? "qa-sep-cdn" : (hostArray[0] == "local" ? "qa-cdn" : hostArray[0] + "-cdn"),
+        "subdomain": hostArray[0] == "local-sep" ? "qa-sep" : (hostArray[0] == "local" ? "qa" : hostArray[0])
+    }
+
+    if (domainObj.domainMain == domainObj.subdomain) {
+        domainObj.cdnsubdomain = "cdn";
+        domainObj.subdomain = '';
+    }
+    return domainObj;
+};
+
+BLDR.animateJS = function (elem, prop, valueToSet, time, isDirectProperty, valueUnit, callback, startValue) {
+    try {
+        var value = startValue ? startValue : (isDirectProperty ? elem[prop] : elem.style[prop]);
+        value = +value.toString().replace('px', '').replace('%', '');
+        var shouldIncrease = true;
+        if (value > valueToSet) {
+            shouldIncrease = false;
+        }
+        function frame() {
+            try {
+                if (shouldIncrease) {
+                    value++;
+                }
+                else {
+                    value--;
+                }
+
+                if (isDirectProperty) {
+                    elem[prop] = value + valueUnit; // show frame
+                }
+                else {
+                    elem.style[prop] = value + valueUnit; // show frame
+                }
+                if (shouldIncrease && value >= valueToSet) {  // check finish condition
+                    clearInterval(id);
+                    callback && callback();
+                }
+                else if (!shouldIncrease && value <= valueToSet) {  // check finish condition
+                    clearInterval(id);
+                    callback && callback();
+                }
+            }
+            catch (ex) {
+                clearInterval(id);
+                callback && callback();
+            }
+        }
+        var id = setInterval(frame, time / (valueToSet > 0 ? valueToSet : time));
+    }
+    catch (ex) {
+        console.log(ex);
+    }
+};
+
+BLDR.startPageLoader = function (overrideColor) {
+    if (document.getElementById("page-loader")) {
+        document.getElementById("page-loader").classList.remove("d-none", "d-hidden", "override-color");
+        if (overrideColor) {
+            document.getElementById("page-loader").classList.add("override-color");
+        }
+    }
+
+    if ((BLDR.getQueryString("utm_source") && BLDR.getQueryString("utm_source").toLowerCase() == 'google') &&
+        (BLDR.getQueryString("utm_medium") && BLDR.getQueryString("utm_medium").toLowerCase() == 'cpc') && BLDR.isRGNCO && !BLDR.IsMobileDevice() && !BLDR.isIPAD()) {
+        bindCustomAnimationImages();
+    }
+};
+
+BLDR.closePageLoader = function () {
+    document.getElementById("page-loader") && document.getElementById("page-loader").classList.add("d-none");
+};
+
+BLDR.startLongLoader = function () {
+    if (longLoaderAnimation && window.BLDR.Portal.isValidLongLoaderCase) {
+        var bodyElem = document.getElementById("body");
+        BLDR.closePageLoader();
+        document.getElementById("long-loader") && document.getElementById("long-loader").classList.remove("d-none", "d-hidden");
+        longLoaderAnimation.play();
+        BLDR.animateJS(document.getElementsByClassName("long-progress-bar")[0], "width", 90, 3000, false, "%", "");
+        if (bodyElem && bodyElem.style && (!BLDR.isIPAD() && !BLDR.IsMobileDevice())) {
+            bodyElem.style.overflow = 'hidden';
+        }
+        if (bodyElem){
+            bodyElem.classList.add("long-loader-enabled");
+        }
+        BLDR.isLongloaderActive = true;
+    }
+    else {
+        if (window.BLDR.Portal.isValidLongLoaderCase) {
+            BLDR.downloadAndBindLongLoader();
+        }
+        else {
+            BLDR.isLongloaderActive = true;
+        }
+        BLDR.startPageLoader(window.BLDR.Portal.isValidLongLoaderCase);
+    }
+};
+
+BLDR.closeLongLoader = function () {
+    if (longLoaderAnimation && isLongLoaderComplete && window.BLDR.Portal.isValidLongLoaderCase) {
+        var bodyElem = document.getElementById("body");
+        BLDR.animateJS(document.getElementsByClassName("long-progress-bar")[0], "width", 100, 400, false, "%", function () {
+            isLongLoaderComplete = false;
+            setTimeout(function () {
+                longLoaderAnimation.stop();
+                document.getElementById("long-loader") && document.getElementById("long-loader").classList.add("d-none");
+                BLDR.animateJS(document.getElementsByClassName("long-progress-bar")[0], "width", 0, 0, false, "%", "");
+                if (bodyElem && bodyElem.style && (!BLDR.isIPAD() && !BLDR.IsMobileDevice())) {
+                    bodyElem.style.overflow = '';
+                }
+                BLDR.isLongloaderActive = false;
+                if (bodyElem){
+                    bodyElem.classList.remove("long-loader-enabled");
+                }
+            }, 400);
+        });
+    }
+    else {
+        BLDR.closePageLoader();
+    }
+};
+
+BLDR.downloadAndBindLongLoader = function () {
+    BLDR.loadJs("https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.8/lottie.min.js", null, function () {
+        var environment = window.location.host.split('.')[0];
+        let path = BLDR.CDNHost + "/assets" + window.BLDR.Paths.ResourcePath;
+        environment = BLDR.environmentURL ? BLDR.environmentURL : environment;
+        if (environment == "local" || environment == "loc") {
+            path = BLDR.CDNHost + BLDR.CDNpathname + window.BLDR.Paths.ResourcePath.replace("/blobcontent", '/files');
+        }
+        var animationJsonPath = (BLDR.isCVOnRGN ? path.replace("/rgn/", "/cvg/") : path) + "externals/lottieloader/lottie-anim.json?v=" + versionNumber;
+        if (lottie) {
+            longLoaderAnimation = lottie.loadAnimation({
+                container: document.getElementById('lottie-animation'),
+                path: animationJsonPath,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true
+            });
+            longLoaderAnimation.addEventListener("data_ready", function () {
+                BLDR.startLongLoader();
+            });
+            longLoaderAnimation.addEventListener("loopComplete", function (event) {
+
+                if (event && event.currentLoop === 1) {
+                    BLDR.closeLongLoader();
+                    if (!isLongLoaderComplete) {
+                        isLongLoaderComplete = true;
+                    }
+                }
+            });
+        }
+        else {
+            BLDR.isLongloaderActive = false;
+        }
+    }, true);
+}
+
+function bindCustomAnimationImages() {
+    var imageUrls = [
+        BLDR.CDNHost + BLDR.imagePath + "/images/" + BLDR.Portal.portalCd + "/logo.svg",
+        BLDR.CDNHost + BLDR.imagePath + "/images/long-loader/loader-img-1.png",
+        BLDR.CDNHost + BLDR.imagePath + "/images/long-loader/loader-img-2.png",
+        BLDR.CDNHost + BLDR.imagePath + "/images/long-loader/loader-img-3.png"
+    ];
+    let customLoaderElem = document.getElementById("custom-long-loader");
+    if (customLoaderElem) {
+        var longLoaderItems = customLoaderElem.querySelectorAll("img.js-longLodrImg");
+        if (longLoaderItems) {
+            var longLoaderItemsArr = Array.from(longLoaderItems);
+            longLoaderItemsArr.forEach(function (elem, index) {
+                if (elem && imageUrls[index]) {
+                    elem.src = imageUrls[index];
+                }
+            });
+        }
+    }
+}
+
+let progressStartValue = 0;
+BLDR.startCustomLongLoader = function () {
+    loaderClassToggle();
+    BLDR.startPageLoader();
+
+    let progressEndValue = 90;
+    let circularProgress = document.getElementsByClassName("loader-progress")[0];
+
+    if (window.BLDR.Portal.isValidLongLoaderCase) {
+        var bodyElem = document.getElementById("body");
+        BLDR.closePageLoader();
+        document.getElementById("custom-long-loader") && document.getElementById("custom-long-loader").classList.remove("d-none", "d-hidden");
+        let progress = setInterval(() => {
+            if (progressStartValue <= progressEndValue) {
+                progressStartValue++;
+            }
+            circularProgress.textContent = `${progressStartValue}%`;
+            circularProgress.style.background = `radial-gradient(closest-side, #fdf1eb 85%, transparent 80% 100%), conic-gradient(#ee6f32 ${progressStartValue}%, #ee6f3226 0)`
+
+            if (progressStartValue == progressEndValue) {
+                clearInterval(progress);
+            }
+        }, 80);
+
+        BLDR.isLongloaderActive = true;
+
+        if (bodyElem && bodyElem.style && (!BLDR.isIPAD() && !BLDR.IsMobileDevice())) {
+            bodyElem.style.overflow = 'hidden';
+        }
+    }
+    else {
+        BLDR.isLongloaderActive = false;
+        BLDR.startPageLoader();
+    }
+};
+
+BLDR.closeCustomLongLoader = function () {
+    let progressEndValue = 100;
+    let circularProgress = document.getElementsByClassName("loader-progress")[0];
+
+    if (window.BLDR.Portal.isValidLongLoaderCase) {
+        BLDR.isLongloaderActive = true;
+        var bodyElem = document.getElementById("body");
+
+        let progress = setInterval(() => {
+            if (progressStartValue <= progressEndValue) {
+                progressStartValue++;
+            }
+            if (circularProgress) {
+                circularProgress.textContent = `${progressStartValue}%`;
+                circularProgress.style.background = `radial-gradient(closest-side, #fdf1eb 85%, transparent 80% 100%), conic-gradient(#ee6f32 ${progressStartValue}%, #ee6f3226 0)`
+            }
+
+            if (progressStartValue == progressEndValue) {
+                clearInterval(progress);
+                document.getElementById("custom-long-loader") && document.getElementById("custom-long-loader").classList.add("d-none");
+                BLDR.isLongloaderActive = false;
+
+
+                if (bodyElem && bodyElem.style && (!BLDR.isIPAD() && !BLDR.IsMobileDevice())) {
+                    bodyElem.style.overflow = '';
+                }
+            }
+        }, 100);
+    }
+    else {
+        BLDR.closePageLoader();
+    }
+};
+
+function loaderClassToggle() {
+    let longLodrBox = document.querySelectorAll('.js-longLodrWrap');
+    longLodrBox.forEach(item => {
+        let longLodrItem = item.querySelectorAll('.js-longLodrItem');
+        let longLodrIndex = 0;
+        if (longLodrItem.length > 1) {
+            let loopInterval = setInterval(function () {
+                if (longLodrIndex === (longLodrItem.length - 1)) {
+                    clearInterval(loopInterval);
+                }
+                if (longLodrIndex !== 0) {
+                    longLodrItem[longLodrIndex - 1].classList.remove('active');
+                } else {
+                    longLodrItem[longLodrItem.length - 1].classList.remove('active');
+                }
+                longLodrItem[longLodrIndex].classList.add('active');
+                if (longLodrIndex == (longLodrItem.length - 1)) {
+                    longLodrIndex = 0;
+                } else {
+                    longLodrIndex++;
+                }
+            }, 1500);
+        }
+    });
+}
+
+BLDR.getSVG = function (url) {
+    var svgNode = BLDR[url];
+    if (svgNode) {
+        return svgNode;
+    }
+    callAjax(url, "GET", false, false, false, false, function (data) {
+        var parser = new DOMParser();
+        var svgDoc = parser.parseFromString(data, "image/svg+xml");
+        var svgNode = svgDoc.querySelector("svg");
+        BLDR[url] = svgNode;
+    });
+    svgNode = BLDR[url];
+    return svgNode;
+}
+
+BLDR.IsMobileDevice = function () {
+    var isMobileCheck = false;
+    if ((/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) || window.innerWidth <= 767) {
+        isMobileCheck = true;
+    }
+    return isMobileCheck;
+};
+
+BLDR.isiOSDevice = function () {
+    if ((navigator.userAgent.match(/iPad|iPhone/i)) || ((navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) && !window.MSStream))
+        return true;
+    else
+        return false;
+};
+
+BLDR.isIPAD = function () {
+    if ((navigator.userAgent.match(/iPad/i)) || ((navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) && !window.MSStream))
+        return true;
+    else
+        return false;
+};
+
+BLDR.isMac = function () {
+    if (navigator.userAgent.match(/Mac OS/i))
+        return true;
+    else
+        return false;
+}
+
+BLDR.getDeviceType = function () {
+    return BLDR.IsMobileDevice() ? "mobile" : BLDR.isIPAD() ? "ipad" : "desktop";
+};
+
+BLDR.updateLoginStatusInExperimentProfile = function () {
+    if (window !== undefined && window.Profile && localStorage.getItem('UserPersona')) {
+        window.Profile.UpdateLoginStatus(true);
+    }
+};
+BLDR.isInternetExplorer = function () {
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf('MSIE ');
+    var trident = ua.indexOf('Trident/');
+    if (msie > 0 || trident > 0) {
+        return true;
+    }
+    else {
+        return false;
+    }
+};
+
+BLDR.isFirefox = function isFirefox() {
+    return navigator.userAgent.toLowerCase().indexOf('firefox') >= 0;
+}
+
+BLDR.loadEcomPrefetchScript = function () {
+    var environment = window.location.host.split('.')[0];
+    var prefixName = "qa-";
+    environment = BLDR.environmentURL ? BLDR.environmentURL : environment;
+    switch (environment) {
+        case "loc":
+            prefixName = "loc-";
+            break;
+        case "reg":
+            prefixName = "reg-";
+            break;
+        case "pen":
+            prefixName = "pen-";
+            break;
+        case "pseudo":
+            prefixName = "pseudo-";
+            break;
+        case "stg":
+            prefixName = "stg-";
+            break;
+        case "resumegenius":
+        case "resumecompanion":
+        case "cvgenius":
+            prefixName = "";
+            break;
+    }
+    var prefetchScriptPath = BLDR.Paths.PaymentBaseUrl + "/build/" + BLDR.Portal.portalCd + "/prefetchscript.js";
+    BLDR.loadJs(prefetchScriptPath, true);
+};
+
+BLDR.hasUsrInfCookie = function () {
+    var userStatus = BLDR.readCookie("userinf");
+    return userStatus ? true : false;;
+}
+
+BLDR.readCookie_User_status = function () {
+    var userStatus = BLDR.readCookie("userinf");
+
+    if (userStatus) {
+
+        userStatus = decodeURIComponent(userStatus);
+    }
+    else {
+        userStatus = BLDR.readCookie("UserStatus");
+    }
+
+    return userStatus;
+}
+
+BLDR.formatUserStatusCookie = function () {
+    try {
+        var hasUsrInfCookie = BLDR.hasUsrInfCookie();
+        if (!hasUsrInfCookie) {
+            var userStatus = BLDR.readCookie_User_status();
+            if (userStatus) {
+                var userStatusObj = JSON.parse(userStatus);
+                if (userStatusObj && userStatusObj.User && userStatusObj.User.AccDisplayName && userStatusObj.User.AccDisplayName != "") {
+                    var decodedValue = uriDecode(userStatusObj.User.AccDisplayName);
+                    if (userStatusObj.User.AccDisplayName === decodedValue) {
+                        userStatusObj.User.AccDisplayName = uriEncode(userStatusObj.User.AccDisplayName);
+                        userStatus = JSON.stringify(userStatusObj);
+                        BLDR.createCookie("UserStatus", userStatus, 1826, null, "None");
+                    }
+                }
+            }
+        }
+
+    }
+    catch (e) {
+        console.log("User Status cookie formatting failed");
+    }
+};
+
+BLDR.LogError = function (errorMessage, componentStack, logAsInfo, callback, logErrInConsole = false) {
+    var currentUrl = window.location.href;
+    var errorObj = {
+        errorMessage: errorMessage,
+        componentStack: componentStack,
+        logAsInfo: logAsInfo,
+        docId: BLDR.readCookie('DocumentID'),
+        userID: BLDR.UserClaims ? BLDR.UserClaims.user_uid : '',
+        sourceAppCd: BLDR.PortalSettings.AppCd,
+        deviceType: BLDR.IsMobileDevice() || BLDR.isIPAD() ? "mobile" : "desktop",
+        productCD: BLDR.PortalSettings.ConfigureProductCd,
+        portalCD: BLDR.PortalSettings.ConfigurePortalCd,
+        currentUrl: currentUrl,
+        isRGNRCP: true
+    };
+    if (logErrInConsole) { console.log(errorObj) };
+    callAjax(BLDR.Paths.BaseApiUrlV2 + 'errors/log', 'POST', true, window.globalCompVars.EnableETEEncryption, window.globalCompVars.EnableUrlETEEncryption, true, function () {
+        if (callback) {
+            callback();
+        }
+    }, null, JSON.stringify(errorObj));
+};
+
+BLDR.preload = function () {
+    for (var i = 0; i < arguments.length; i++) {
+        var img = new Image();
+        img.src = arguments[i];
+    }
+};
+
+BLDR.CreateGCaptchaCookie = function (checkExisting) {
+    if (checkExisting) {
+        let cookieValue = BLDR.readCookie(BLDR.GCaptchaCookieName);
+        if (!cookieValue) { cookieValue = 0; }
+        BLDR.createCookie(BLDR.GCaptchaCookieName, cookieValue);
+    }
+    else {
+        BLDR.createCookie(BLDR.GCaptchaCookieName, 0);
+    }
+};
+
+
+BLDR.processLocalization = function () {
+    var ipArray = BLDR.localizationItems;
+    var itemsLength = ipArray ? ipArray.length : 0;
+    BLDR.orgLocalizationItems = {};
+    for (var i = 0; i < itemsLength; i++) {
+        var item = ipArray[i];
+        if (BLDR[item]) {
+            BLDR.orgLocalizationItems[item] = JSON.parse(JSON.stringify(BLDR[item]));
+            BLDR.enableLocalizationWithRecursion && BLDR.handleLocalizationWithRecursion(BLDR[item]);
+            BLDR.Localization[item] = BLDR[item];
+        }
+    }
+}
+
+
+function handleRecursiveWithinText(obj, key, item, positionStr = 0, positionEnd = 0) {
+    let startBracketIndex = item.indexOf("{", positionStr);
+    let endBracketIndex = item.indexOf("}", positionEnd) + 1;
+    if (startBracketIndex < 0 || endBracketIndex < 0)
+        return;
+
+    item = item.substring(startBracketIndex, endBracketIndex)
+    let localizationKey = item.substring(1, item.length - 1)
+    if (BLDR.Localization[localizationKey])
+        obj[key] = obj[key].replace(item, BLDR.Localization[localizationKey]);
+
+    handleRecursiveWithinText(obj, key, obj[key], startBracketIndex + 1, endBracketIndex + 1);
+}
+
+BLDR.handleLocalizationWithRecursion = function (obj) {
+    if (Array.isArray(obj)) {
+        obj.forEach(function (key, index) {
+            var typeValue = typeof (key);
+            if (typeValue == "string" && key.startsWith("lkl_")) {
+                obj[index] = BLDR.Localization[key];
+            } else {
+                BLDR.handleLocalizationWithRecursion(key)
+            }
+        });
+    }
+    else if (typeof (obj) == "object") {
+        for (var key in obj) {
+            var item = obj[key];
+            var typeValue = typeof (item);
+
+            if (typeValue == "object") {
+                BLDR.handleLocalizationWithRecursion(item);
+            }
+            else if (typeValue == "string" && item.startsWith("lkl_")) {
+                obj[key] = BLDR.Localization[item];
+            } else if (typeValue == "string" && item.startsWith("{") && item.endsWith("}")) {
+                let localizationKey = item.substring(1, item.length - 1)
+                if (BLDR.Localization[localizationKey])
+                    obj[key] = BLDR.Localization[localizationKey];
+            } else if (typeValue == "string" && item.includes("{") && item.includes("}")) {
+                handleRecursiveWithinText(obj, key, item)
+            }
+        }
+    }
+}
+
+
+function loadJsonFile(fileUrl, callback, isAsync, errorCallBack) {
+    if (window.$ != undefined && window.$ != null) {
+        window.$.ajax({
+            url: fileUrl,
+            method: 'GET',
+            async: isAsync,
+            cache: true,
+            dataType: 'json',
+            success: function (data) {
+                callback(data);
+            },
+            error: function () {
+                if (errorCallBack) {
+                    errorCallBack();
+                }
+            }
+        });
+    }
+    else {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+                if (xmlhttp.status == 200) {
+                    var data = JSON.parse(xmlhttp.responseText);
+                    callback(data);
+                }
+                else if (xmlhttp.status == 400) {
+                    console.error('There was an error 400 while fetching json file ');
+                }
+                else {
+                    console.error('something else other than 200 was returned while fetching json file');
+                }
+            }
+        };
+        xmlhttp.open('GET', fileUrl, true);
+        xmlhttp.send();
+    }
+}
+
+function appClick(e) {
+    //if (e) e.stopPropagation();  //// do not block, as signup page next page click stop working and validation is not firing
+    if (document.getElementById("app").classList.contains("scrlviewToError")) {
+        let includeParentContainerList = ["builder-form-layout-button-section", "btn-group-footer", "button-default", "btn-wrap-mob"];
+        if (e && e.target && e.target.parentElement && e.target.parentElement.classList) {
+            let isInclude = false;
+            includeParentContainerList.forEach(item => {
+                isInclude = isInclude || (e.target.parentElement.classList.contains(item));
+            })
+
+            if (isInclude) {
+                scrollPageToTopErrorControl()
+            };
+        }
+    }
+}
+
+function scrollPageToTopErrorControl(errorClass) {
+    setTimeout(() => {
+        let errorClassName =
+            errorClass && errorClass.length > 0 ? errorClass : "is-invalid";
+        let errorControlElements = document.getElementsByClassName(
+            errorClassName
+        );
+        if (errorControlElements && errorControlElements.length > 0) {
+            let firstErrorControl = errorControlElements[0];
+            let isControlVisible = isControlInViewport(firstErrorControl);
+            if (!isControlVisible) {
+                firstErrorControl.scrollIntoView({ block: "start" });
+            }
+        }
+    }, 400);
+}
+
+function isControlInViewport(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+        rect.top >= 60 &&
+        rect.left >= 0 &&
+        rect.bottom <=
+        (window.innerHeight || document.documentElement.clientHeight) - (BLDR.IsMobileDevice() ? 108 : 0) &&
+        rect.right <=
+        (window.innerWidth || document.documentElement.clientWidth)
+    );
+}
+
+BLDR.TrackAliasAndIdentify = function () {
+    if (!BLDR.isloggedIn) {
+        var interval = setInterval(function () {
+            if (typeof analytics != 'undefined') {
+                clearInterval(interval);
+                analytics.alias(BLDR.userId);
+                setTimeout(function () {
+                    analytics.identify(BLDR.userId, null);
+                }, 100);
+            }
+        }, 50);
+    }
+}
+var deDupeDebounceTimer;
+function deDupeDebounce(func, delay) {
+    return function () {
+        var context = this
+        var args = arguments
+        clearTimeout(deDupeDebounceTimer)
+        deDupeDebounceTimer = setTimeout(function () {
+            func.apply(context, args)
+        }, delay)
+    }
+}
+function deDupeIdentify(traits) {
+    if (!BLDR.traits) {
+        BLDR.traits = {};
+    }
+    Object.keys(traits).forEach(key => {
+        if (!BLDR.traits[key] || BLDR.traits[key].value != traits[key]) {
+            if (traits[key]) {
+                BLDR.traits[key] = { value: traits[key], isSent: false }
+            }
+        }
+    });
+    deDupeDebounce(syncWithSegment, 1000 * 5)();
+}
+function syncWithSegment() {
+    let traits = {};
+    let shouldSend = false;
+    Object.keys(BLDR.traits).forEach(key => {
+        let data = BLDR.traits[key];
+        if (!data.isSent && data.value) {
+            traits[key] = data.value;
+            BLDR.traits[key].isSent = true;
+            shouldSend = true;
+        }
+    });
+    if (shouldSend && Object.keys(traits).length) {
+        BLDR.TrackEvents('_identify', traits, BLDR.userId, BLDR.isloggedIn);
+    }
+}
+BLDR.TrackEvents = function (eventName, eventPropVal, userUID, isUserLoggedIn) {
+    var eventPropsToBeSent = {};
+
+    if (eventPropVal) {
+        for (var item in eventPropVal) {
+            if (eventPropVal[item]) {
+                eventPropsToBeSent[item] = eventPropVal[item];
+            }
+        }
+    }
+
+    eventPropsToBeSent["userid"] = userUID ? userUID : BLDR.UserClaims && BLDR.UserClaims.user_uid;
+    if (eventName) {
+        if (eventName == 'identify') {
+            deDupeIdentify(eventPropVal);
+            return;
+        }
+        else if (eventName == '_identify') {
+            eventName = 'identify';//Skipping dedupe logic
+        }
+    }
+    if (eventName != "identify") {
+        eventPropsToBeSent["language"] = window.BLDR && window.BLDR.cultureCD ? window.BLDR.cultureCD : "";
+        eventPropsToBeSent["website"] = window.BLDR.PortalSettings.ConfigurePortalName;
+        eventName == 'automatic content' && (BLDR.isLite) && (eventPropsToBeSent["language"] = window.BLDR && window.BLDR.cultureCD);
+    }
+    if (BLDR.liteFlowCultureCD) {
+        eventPropsToBeSent['resume locale'] = BLDR.liteFlowCultureCD;
+    }
+    if (typeof analytics != 'undefined') {
+        TrackEvents(eventName, eventPropsToBeSent, userUID, isUserLoggedIn);
+    }
+    else {
+        setTimeout(function () {
+            BLDR.TrackEvents(eventName, eventPropsToBeSent, userUID, isUserLoggedIn);
+        }, 100);
+    }
+
+};
+
+function loadPortalSpecificItems() {
+    if (window.BLDR.getQueryString("mode") === "edit" && window.BLDR.getQueryString("docid") == null) {
+        window.BLDR.Portal.isValidLongLoaderCase = false;
+    }
+    else {
+        window.BLDR.Portal.isValidLongLoaderCase = window.BLDR.Portal.isValidLongLoaderCase ? !(window.BLDR.getQueryString("mode") === "edit" &&
+            window.BLDR.getQueryString("docid") != null) && BLDR.isBaseRoute : window.BLDR.Portal.isValidLongLoaderCase;
+
+    }
+
+    if (window.BLDR.Portal.isValidLongLoaderCase && BLDR.isRG && isIsoURL() && isReferrer()) {
+        window.BLDR.Portal.isValidLongLoaderCase = false;
+    }
+
+    var src = BLDR.CDNHost + BLDR.CDNpathname + "/stylesheet/css/" + BLDR.Portal.cssBundleName + ".css";
+    var fontsubsetter = BLDR.CDNHost + BLDR.CDNpathname + "/stylesheet/fonts/fa-subsetter/css/fontawesome.min.css";
+    if (versionNumber != "1.0.0") {
+        fontsubsetter = fontsubsetter + "?v=" + versionNumber;
+        src = src + "?v=" + versionNumber;
+    }
+    loadWebFonts(loadStyleSheet({ src: fontsubsetter, tagId: 'base-fs-link', id: true, type: true }));
+    loadStyleSheet({ src, id: true, type: true });
+    loadStyleSheet({ src: "https://fonts.googleapis.com/css?family=Lexend:700,900%7CInter:400,500,700&display=swap", id: false, type: false });
+
+    var link = document.querySelector("link[rel*='icon']");
+    let assetsPath = BLDR.Paths.BasePath.split('/');
+    if (BLDR.isLite) assetsPath.splice(1, 1);
+
+    link.href = BLDR.CDNHost + window.BLDR.imagePath + "/images/" + BLDR.Portal.portalCd + "/favicon.ico";
+
+    document.getElementById("page-loader") && document.getElementById("page-loader").classList.add(BLDR.Portal.portalCd + "-loader");
+    document.getElementById("long-loader") && document.getElementById("long-loader").classList.add(BLDR.Portal.portalCd + "-long-loader");
+    document.getElementById("custom-long-loader") && document.getElementById("custom-long-loader").classList.add(BLDR.Portal.portalCd + "-custom-long-loader");
+
+    if ((BLDR.getQueryString("utm_source") && BLDR.getQueryString("utm_source").toLowerCase() == 'google') &&
+        (BLDR.getQueryString("utm_medium") && BLDR.getQueryString("utm_medium").toLowerCase() == 'cpc') && BLDR.isRGNCO && !BLDR.IsMobileDevice() && !BLDR.isIPAD()) {
+        BLDR.isCustomLoader = true;
+        BLDR.startCustomLongLoader();
+    } else {
+        BLDR.startLongLoader();
+    }
+}
+
+function loadGPTConfig(data) {
+    let showGPTContent = BLDR.getQueryString("showgptcontent");
+    if (data && data.showGPTContent) {
+        window.BLDR.showGPTContent = true;
+    } else if (showGPTContent) {
+        window.BLDR.showGPTContent = true;
+    }
+}
+
+function getResourceUrl() {
+    var fileCD = BLDR.Portal.portalCd;
+    if (BLDR.isRG && isRGNCO()) {
+        BLDR.isRGNCO = true;
+        window.document.body.classList.add('rg-co');
+    }
+    if (BLDR.isRG && isCVOnRGN()) {
+        BLDR.isCVOnRGN = true;
+    }
+
+    return "/blobcontent/" + (isIsoURL() ? "sep/" : "") + fileCD + "/";
+}
+
+function isCVOnRGN() {
+    var referrer = document.referrer;
+    let checkDomain = "resumegenius" + (BLDR.isRGNCO ? ".co" : ".com");
+    if ((referrer != null || referrer.length > 0)
+        && (referrer.indexOf(checkDomain) > -1) && referrer.indexOf("cv-") > -1) {
+        return true;
+    }
+    // if ((referrer != null || referrer.length > 0)
+    //     && referrer.indexOf("cvgenius.com") > -1) {
+    //     return true;
+    // }
+    // else if (BLDR.getQueryString("utm_source")
+    //     && BLDR.getQueryString("utm_source").toLowerCase() == "cvgenius"
+    //     && BLDR.getQueryString("utm_medium")
+    //     && BLDR.getQueryString("utm_medium").toLowerCase() == "referral") {
+    //     return true;
+    // }
+    else if (referrer.indexOf("dashboard") > -1
+        && getUserPreferenceValue('CVGU') == "1") {
+        return true;
+    }
+    else if ((referrer != null || referrer.length > 0)
+        && ((referrer.indexOf(checkDomain) > -1)
+            || referrer.indexOf("resumecompanion.com") > -1)
+        && referrer.indexOf("auth") == -1
+    ) {
+        return false;
+    }
+    else if (getUserPreferenceValue('CVGU') == "1") {
+        return true;
+    }
+    else
+        return false;
+}
+
+function getCommonSettingValue(settingValueCd) {
+    var settingValue = null;
+    var common = isSessionStorageSupported() ? sessionStorage.getItem("common") : null;
+    if (common)
+        common = JSON.parse(common);
+    if (settingValueCd != null && settingValueCd != "" && common != null && common.length > 0) {
+        var item = common.find(function (e) { return e[settingValueCd]; });
+        if (item) {
+            settingValue = item[settingValueCd];
+        }
+    }
+    return settingValue;
+}
+
+function getUserPreferenceValue(userPreferenceCd) {
+    var prefValue = null;
+    var userPrefArray = getCommonSettingValue("USPF");
+    if (userPrefArray && userPrefArray.length > 0) {
+        var preference = userPrefArray.find(function (item) { return item.code == userPreferenceCd; });
+        if (preference) {
+            prefValue = preference.value;
+        }
+    }
+    return prefValue;
+}
+
+function getConfigUrl() {
+    var environment = window.location.host.split('.')[0];
+    var configName = "qa";
+    var baseUrl = BLDR.CDNHost + "/assets" + window.BLDR.Paths.ResourcePath + "rbg/config/";
+    environment = BLDR.environmentURL ? BLDR.environmentURL : environment;
+    switch (environment) {
+        case "loc":
+            configName = "loc";
+            break;
+        case "reg":
+        case "reg-sep":
+            configName = "reg";
+            break;
+        case "pen":
+            configName = "pen";
+            break;
+        case "stg":
+        case "stg-sep":
+            configName = "stg";
+            break;
+        case "perf":
+            configName = "perf";
+            break;
+        case "resumegenius":
+        case "resumecompanion":
+        case "cvgenius":
+        case "sep":
+            configName = "prod";
+            break;
+        case "local":
+        case "local-sep":
+            baseUrl = BLDR.CDNHost + BLDR.CDNpathname + "/files/" + BLDR.Portal.portalCd + "/config/";
+            // }
+            break;
+        case "pseudo":
+            configName = "pseudo";
+            //baseUrl = window.BLDR.Paths.ResourcePath.replace('blobcontent', 'files') + "config/";
+            break;
+    }
+    var filename = configName + ".json";
+    if (versionNumber != "1.0.0") {
+        filename = filename + "?v=" + versionNumber;
+    }
+    return baseUrl + filename;
+}
+
+BLDR.isEnvFlow = function () {
+    if (BLDR.getQueryString('env')) {
+        BLDR.createCookie("env", BLDR.getQueryString('env'));
+        return true;
+    } else if (BLDR.readCookie("env")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+async function getLocalizationUrl() {
+    var environment = window.location.host.split('.')[0];
+    var localizationName = "qa";
+    var baseUrl = BLDR.CDNHost + "/assets" + window.BLDR.Paths.ResourcePath + "rbg/resources/";
+    environment = BLDR.environmentURL ? BLDR.environmentURL : environment;
+    localizationName = BLDR.IsLitePortalFlow && BLDR.cultureCD ? BLDR.cultureCD : environment;
+
+    switch (environment) {
+        case "resumegenius":
+        case "resumecompanion":
+        case "cvgenius":
+        case "sep":
+            baseUrl = BLDR.isLite ? baseUrl + "prod" + "/" : baseUrl;
+            localizationName = BLDR.IsLitePortalFlow && BLDR.cultureCD ? BLDR.cultureCD : "prod";
+            break;
+        case "local":
+        case "local-sep":
+            const baseurlext = BLDR.IsLitePortalFlow && BLDR.cultureCD ? "" : '/files/' + BLDR.Portal.portalCd;
+            baseUrl = BLDR.CDNHost + window.BLDR.Paths.ResourcePath.replace('/blobcontent/' + (isIsoURL() ? "sep/" : "") + BLDR.Portal.portalCd, BLDR.CDNpathname + baseurlext) + "resources/";
+            baseUrl = baseUrl.replace("/sep", "");
+            localizationName = BLDR.IsLitePortalFlow && BLDR.cultureCD ? BLDR.cultureCD : "localization";
+            break;
+        default:
+            baseUrl = BLDR.isLite ? baseUrl + environment + "/" : baseUrl;
+    }
+
+    var filename = localizationName + ".json";
+    if (BLDR.localizationFileName) {
+        filename = BLDR.localizationFileName;
+    }
+    // iso url changes
+    if (isIsoURL()) {
+        filename = filename.replace("-sep", "");
+    }
+
+    if (versionNumber != "1.0.0") {
+        filename = filename + "?v=" + versionNumber;
+    }
+
+    let isEnvFlow = BLDR.isEnvFlow();
+    if (isEnvFlow) {
+        let envValue = BLDR.readCookie("env").toLowerCase();
+        let envBaseUrl = BLDR.Paths.rootURL + "/blobcontent/pwb/locales/common/";
+        if (envValue != "loc") {
+            let envFilename = BLDR.PortalSettings.ConfigurePortalCd.toLowerCase() + "_rsm_" + envValue + ".json?v=" + versionNumber;
+            await fetch(envBaseUrl + envFilename).then(resp => {
+                if (resp.ok) {
+                    baseUrl = envBaseUrl;
+                    filename = envFilename;
+                }
+            });
+        }
+    }
+    return baseUrl + filename;
+}
+
+function handleLocalizationText(result, resolve) {
+    var data = JSON.parse(result);
+    window.BLDR.Localization = data.localizedtext;
+    if (BLDR.Localization.url_base_path && BLDR.isLite) {
+        BLDR.Paths.BasePath = BLDR.CountryCultureSlugPrefix + "" + BLDR.Localization.url_base_path + "/app";
+        BLDR.Portal.slug = BLDR.Paths.BasePath;
+    }
+    BLDR.Paths.oopsPagePath = BLDR.Localization.url_oops
+    BLDR.Paths.StartPagePath = BLDR.Localization.url_how_it_works;
+    BLDR.Paths.StartHTSPagePath = BLDR.Localization.url_how_to_start;
+    BLDR.Paths.ResumeLinkBasePath = BLDR.Localization.url_resume_link_base_url;
+    BLDR.GPTParserData = {
+        successMessage: BLDR.Localization.gpt_imported_sucessfully,
+        exprSectionMessage: BLDR.Localization.gpt_Work_Experience_Imported,
+        cntcSectionMessage : BLDR.Localization.gpt_Contact_Imported
+    }
+
+    BLDR.processLocalization()
+
+    BLDR.externalLinks = addSlugToUrls(BLDR.externalLinks);
+
+    window.BLDR.Paths.DataAccessBasePath = BLDR.isLite ? BLDR.CountryCultureSlugPrefix + BLDR.Localization.url_data_access
+        : BLDR.Localization.url_data_access;
+    window.BLDR.Paths.SellPageUrl = BLDR.externalLinks.paymentLink;
+    window.BLDR.Paths.BaseUrl = BLDR.externalLinks.dashboardLink;
+    window.BLDR.Paths.DashboardLoginUrl = BLDR.externalLinks.dashboardLoginUrl;
+    window.BLDR.Paths.AccountInfoUrl = BLDR.externalLinks.accountInfoUrl;
+    window.BLDR.Paths.PaymentBaseUrl = BLDR.externalLinks.paymentBaseURL;
+
+    window.BLDR.Paths.termsOfUseURL = BLDR.externalLinks.termsOfUseLink;
+    window.BLDR.Paths.privacyURL = BLDR.externalLinks.privacyPolicyLink;
+    window.BLDR.Paths.contactUsURL = BLDR.externalLinks.contactusLink;
+    window.BLDR.Paths.impressumURL = BLDR.externalLinks.impressumLink;
+
+    downLoadAccountsJs();
+
+    initializeMsgUtil(window.globalCompVars.EnableUrlETEEncryption, window.globalCompVars.EnableETEEncryption, BLDR.msgUtilKeyword,
+        BLDR.msgUtilYear, BLDR.msgUtilMonth, BLDR.msgUtilDate, resolve);
+}
+
+/**
+ * @param {array} countries List of countries populated from API Response
+ * @return Will set countries in BLDR after setting the countries that required to be on the top in the list.
+**/
+function handleCountryResponse(countries) {
+    countries = JSON.parse(countries);
+    countries = countries.map(item => ({
+        value: BLDR.cultureCD == 'pl-PL' && item.countryCD == "PL" ? 'Polska' : item.countryName,
+        label: BLDR.cultureCD == 'pl-PL' && item.countryCD == "PL" ? 'Polska' : item.countryName,
+        countryCD: item.countryCD,
+        flagIcon: item.flagIcon
+    }))
+    countries = countries.sort((x, y) => x.value.localeCompare(y.value))
+    const { countriesToBeOnTop } = window.BLDR;
+    if (countriesToBeOnTop && countriesToBeOnTop.length > 0) {
+        let countryObjTobeOnTop = [];
+        countriesToBeOnTop.forEach(countryCD => {
+            let foundCountry = countries.find(x => x.countryCD === countryCD);
+            foundCountry && countryObjTobeOnTop.push(foundCountry);
+        })
+        let temp = countries.filter(x => countriesToBeOnTop.find(countryCD => x.countryCD === countryCD) ? false : true)
+        countries = [...countryObjTobeOnTop, ...temp];
+    }
+    BLDR.Countries = countries;
+}
+
+function setSegmentProperties() {
+    window.segment = {
+        Integrations: {
+            "Google Analytics": false,
+        },
+        Domain: BLDR.Portal.cookieDomain,
+        DisableFullStory: true
+    }
+    window.SEGMENT_EVENTS_TO_ALL = true;
+    window.FIRE_PAGELOAD_EVENT = true;
+    window.segment.CommonProps = {
+        'document type': 'resumes',
+        'product': 'Web',
+        'builder': 'Resumes'
+    }
+}
+
+function addSlugToUrls(obj) {
+    let slugUrl = "";
+    if (BLDR.CountrySlug) {
+        slugUrl = BLDR.CountrySlug;
+    }
+    if (BLDR.CultureCD && BLDR.CultureSlug) {
+        slugUrl = BLDR.CountrySlug + "/" + BLDR.CultureCD;
+    }
+    for (let key in obj) {
+        if (typeof obj[key] === "string") {
+            if (slugUrl) {
+                obj[key] = obj[key].replace("{slug}", slugUrl)
+                obj[key] = obj[key].replace("{country_slug}", BLDR.CountrySlug)
+            } else {
+                obj[key] = obj[key].replace("{slug}/", "")
+                obj[key] = obj[key].replace("{country_slug}/", "")
+            }
+        }
+    }
+    return obj;
+}
+
+function isRGNCO() {
+    let isrgnco = false;
+    let domainObj = BLDR.getDomainObject();
+    if (domainObj.domainExt && domainObj.domainExt == "co") {
+        isrgnco = true;
+    }
+    return isrgnco;
+}
+
+function replaceConfigPlaceHolders(data) {
+    let domainObj = BLDR.getDomainObject();
+    if (domainObj.subdomain == '') {
+        // for prod cases, when resumegenius is domainmain and '' is subdomain .
+        data = data.replace(/@@subdomain./g, '');
+    }
+    data = data.replace(/@@domainDefExt/g, domainObj.domainDefExt);
+    data = data.replace(/@@domainExt/g, domainObj.domainExt);
+    data = data.replace(/@@domain/g, domainObj.domainMain);
+    data = data.replace(/@@cdnSubdomain/g, domainObj.cdnsubdomain);
+    data = data.replace(/@@subdomain/g, domainObj.subdomain);
+    return data;
+}
+
+function updateFromDomainExtention(jsonData) {
+    let domainObj = BLDR.getDomainObject();
+    let domainKey = domainObj.domainMain + "-" + domainObj.domainExt;
+    if (domainKey && jsonData.domainExtention && jsonData.domainExtention[domainKey]) {
+        let extData = jsonData.domainExtention[domainKey];
+        Object.keys(extData).forEach(function (key) {
+            if (typeof extData[key] === 'object') {
+                if (jsonData[key]) {
+                    Object.assign(jsonData[key], extData[key]);
+                }
+                else {
+                    jsonData[key] = extData[key];
+                }
+            }
+            else {
+                jsonData[key] = extData[key];
+            }
+        });
+    }
+    return jsonData;
+}
+
+function isReferrer() {
+    const referrer = document.referrer;
+    return ((referrer != null || referrer.length > 0)
+        && (referrer.indexOf('resumegenius') > -1));
+}
+
+function formatNumberForLocale(num, locale) {
+    return num.toLocaleString(locale);
+}
+
+function getTrustPilotTotalReviewsCount() {
+    const { trustpilotParams } = window.BLDR;
+    const apiQueryString = `businessUnitId=${trustpilotParams.businessUnitId}&locale=${trustpilotParams.locale}`;
+    const trustpilotApiUrl = `${trustpilotParams.baseUrl}${trustpilotParams.templateId}?${apiQueryString}`;
+    window.callAjax(trustpilotApiUrl, 'GET', true, false, false, false, resp => {
+        if (resp) {
+            const tpApiResponse = JSON.parse(resp);
+            if (
+                tpApiResponse.businessUnit &&
+                tpApiResponse.businessUnit.numberOfReviews &&
+                tpApiResponse.businessUnit.numberOfReviews.total
+            ) {
+                const totalReviewsFormatted = formatNumberForLocale(
+                    tpApiResponse.businessUnit.numberOfReviews.total,
+                    BLDR.cultureCD
+                );
+                BLDR.Portal.trustpilotTotalReviewsCount = totalReviewsFormatted;
+            }
+        }
+    });
+};
+
+function handleConfig(result, resolve) {
+    result = replaceConfigPlaceHolders(result);
+    var jsonData = JSON.parse(result);
+    if (BLDR.isRGNCO) { jsonData = updateFromDomainExtention(jsonData); }
+    var data = jsonData;
+    window.BLDR.externalLinks = data.externalLinks;
+    window.BLDR.Paths.AccountsURL = data.externalLinks.accountsURL;
+    window.BLDR.Paths.termsOfUseURL = data.externalLinks.termsOfUseLink;
+    window.BLDR.Paths.privacyURL = data.externalLinks.privacyPolicyLink;
+    window.BLDR.Paths.rootURL = data.externalLinks.rootURL;
+    window.BLDR.Paths.landingPage = data.externalLinks.landingPage;
+    window.BLDR.Paths.contactUsURL = data.externalLinks.contactusLink;
+    window.BLDR.Paths.mysettingsURL = data.externalLinks.mysettingLink;
+    window.BLDR.Paths.segmentURL = data.externalLinks.segmentUrl;
+    BLDR.PortalSettings.ConfigurePortal = data.portalID;
+    BLDR.PortalSettings.ConfigurePortalCd = data.portalCD;
+    BLDR.PortalSettings.ConfigureProductId = data.productID;
+    BLDR.PortalSettings.ConfigureProductCd = data.productCD;
+    BLDR.PortalSettings.ConfigurePortalName = data.portalName;
+    BLDR.PortalSettings.ClientCd = data.clientCD;
+    BLDR.PortalSettings.AppCd = data.appCD;
+    BLDR.emailProviders = data.emailProviders;
+    BLDR.ResumePublishedEnableAPIOnLower = false;
+    BLDR.ResumePublishedCount = null;
+
+    BLDR.CancellationSurveyAPIDataLoaded = false;
+    BLDR.CancellationSurveyJBOFCount = null;
+    BLDR.CancellationSurveyCALLCount = null;
+
+    if (BLDR.Portal.isValidLongLoaderCase && BLDR.isRG && isIsoURL() && isReferrer()) {
+        // hide long loader in ISO application
+        BLDR.Portal.isValidLongLoaderCase = false;
+    }
+    window.BLDR.VisitorApiSetting.JSURL = data.externalLinks.visitorAPIUrl;
+    window.BLDR.featureSets = getFeatureSets(data.featureSets);
+    window.BLDR.googleClientID = data.googleLoginClientID;
+    window.BLDR.facebookClientID = data.facebookAppId;
+    window.BLDR.templateId = BLDR.Portal.templateId ? BLDR.Portal.templateId : "1664";
+    window.BLDR.styleSheetName = data.styleSheetName ? data.styleSheetName : "RbtoHtml2";
+    window.BLDR.multiColumnStyleSheetName = data.multiColumnStyleSheetName;
+    window.BLDR.configServiceBlobUrl = data.externalLinks.configSvcBlobUrl;
+    window.BLDR.maxloopCount = data.maxloopCount ? data.maxloopCount : BLDR.maxloopCount;
+    window.BLDR.DebounceTime = data.apiDebounceTime ? parseInt(data.apiDebounceTime) : 500;
+    window.BLDR.Skins = data.skins;
+    window.BLDR.fontsForSkins = data.fontsForSkins;
+    window.BLDR.csContactNumber = data.csContactNumber;
+    window.BLDR.defaultJobtitleForSearch = data.defaultJobtitleForSearch;
+    window.BLDR.removeGraduationDateExp = data.removeGraduationDateExp;
+    window.globalCompVars.googleRecaptchaSiteKey = data.gcaptchaKey;
+    window.BLDR.googlePickerInfo = data.googlePickerInfo;
+    window.BLDR.dropboxPickerInfo = data.dropboxPickerInfo;
+    window.BLDR.showLiveResumePreview = data.showLiveResumePreview;
+    window.BLDR.hideSocialSigninBlock = data.hideSocialSigninBlock ? data.hideSocialSigninBlock : false;
+    window.BLDR.Paths.resumeGeniusSignInURl = data.externalLinks.resumeGeniusSignInURl;
+    window.BLDR.GPTSummaryPromptVersion = data.gptSummaryPromptVersion;
+    window.BLDR.GptSummaryPromptVersionTurbo = data.gptSummaryPromptVersionTurbo
+    window.BLDR.GPTChatSessionPrompt = data.gptChatSessionPrompt;
+    window.BLDR.GPTParserData = {};
+    window.BLDR.Portal.url = data.portalUrl;
+    window.BLDR.Portal.slug = BLDR.Paths.BasePath;
+    window.BLDR.Portal.portalCd = data.portalCD.toLowerCase();
+    window.BLDR.defaultSkin = data.defaultSkin;
+    window.BLDR.Portal.defaultSkin = data.defaultSkin;
+    window.BLDR.Portal.portalId = data.portalID.toString();
+    window.BLDR.Portal.templateId = data.templateId;
+    window.BLDR.Portal.downLoadAccountsLoginJs = data.downLoadAccountsLoginJs;
+    window.BLDR.Portal.cookieDomain = data.cookieDomain;
+    window.BLDR.Portal.userStageStrategyID = data.userStageStrategyID;
+    window.BLDR.Portal.skinImagesPath = data.skinImagesBasePath;
+    window.BLDR.imagePath = data.imagePath;
+    window.globalCompVars.BaseApiUrl = BLDR.Paths.BaseApiUrl = getApiUrl('v1');
+    window.globalCompVars.BaseApiUrlV2 = BLDR.Paths.BaseApiUrlV2 = getApiUrl('v2');
+    window.globalCompVars.BaseApiUrlV3 = BLDR.Paths.BaseApiUrlV3 = getApiUrl('v3');
+    window.globalCompVars.BaseApiUrlV4 = BLDR.Paths.BaseApiUrlV4 = getApiUrl('v4');
+    window.globalCompVars.LookupApiUrl = BLDR.Paths.LookupApiUrl = getCustomApiUrl('lookup');
+    window.globalCompVars.ContentApiUrl = BLDR.Paths.ContentApiUrl = getCustomApiUrl('content');
+    window.BLDR.Definition_Tips = data.definition_tips;
+    window.globalCompVars.EnableUrlETEEncryption = data.enableUrlEteEncryption;
+    window.globalCompVars.EnableETEEncryption = data.enableEteEncryption;
+    window.BLDR.msgUtilKeyword = data.msgUtilKeyword;
+    window.BLDR.msgUtilYear = data.msgUtilYear;
+    window.BLDR.msgUtilMonth = data.msgUtilMonth;
+    window.BLDR.msgUtilDate = data.msgUtilDate;
+    window.BLDR.isNewV3JSExperiment = data.isNewV3JSExperiment || false;
+    window.BLDR.isolation_layer_id = data.isolation_layer_id;
+    window.BLDR.isolation_replaceEnv = data.isolation_replaceEnv || "qa-sep";
+    window.BLDR.zendeskChat = data.zendeskChat || false;
+    window.BLDR.trustpilotParams = data.trustpilotParams;
+    BLDR.localizationItems = data.localizationItems || [];
+    for (var i = 0; i < BLDR.localizationItems.length; i++) {
+        BLDR[BLDR.localizationItems[i]] = data[BLDR.localizationItems[i]];
+    }
+    BLDR.enableLocalizationWithRecursion = true;
+
+    if (window.BLDR.hideSocialSigninBlock) {
+        window.document.body.classList.add('rmv-scl-blck');
+    }
+
+    loadGPTConfig(data);
+    if (data.testUserIp)
+        window.BLDR.testUserIp = data.testUserIp;
+    if (data.portalExperiments) {
+        BLDR.PortalExperiments = data.portalExperiments;
+
+    }
+    if (data.enableNewRelic) {
+        typeof addNewRelic == "function" && addNewRelic(data.newRelicApplicationID, data.sampleDenominator, data.newRelicLicenseKey);
+    }
+    data.skins.forEach(function (s) {
+        var extension = '.png';
+        s.blobUrl = data.externalLinks.configSvcBlobUrl + BLDR.Portal.skinImagesPath + s.skinCD.toLowerCase() + extension;
+        s.imageURL = data.externalLinks.configSvcBlobUrl + BLDR.Portal.skinImagesPath + s.skinCD.toLowerCase() + extension;
+        s.htmlURL = data.externalLinks.configSvcBlobUrl + s.skinCD + ".htm";
+    });
+
+    // BLDR.fontsForSkins && BLDR.fontsForSkins.forEach((e) => {
+    //     loadStyleSheet({ src: e, type: false });
+    // })
+
+    if (
+        (BLDR.featureSets.htsTrustpilotMicroWidget &&
+            BLDR.trustpilotParams)
+    ) {
+        getTrustPilotTotalReviewsCount();
+    }
+    preconnect("https://fonts.gstatic.com");
+    preconnect("https://fonts.googleapis.com");
+    setSegmentProperties();
+    fireCDNExperimentViewedEvents();
+    setSkinCdFromPortal();
+    setSummaryFromPortal();
+    resolve(data);
+    // initializeMsgUtil(BLDR.enableUrlEteEncryption, BLDR.enableEteEncryption, BLDR.msgUtilKeyword,
+    //     BLDR.msgUtilYear, BLDR.msgUtilMonth, BLDR.msgUtilDate, resolve);
+    // Commenting as this code is logging out user session
+    // setInterval(function () {
+    //     window.BLDR.isUserExist();
+    // }, 15 * 60 * 1000);
+
+    // Always keep this handle config last call
+
+    // if (configResolve) {
+    //     configResolve('');
+    // }
+}
+
+function getCDNExperimentVariant(experimentID) {
+    const expCookie = BLDR.readCookie('gnxiuykvcje');
+    if (!expCookie) return;
+    let variant = null;
+    let variantName = null;
+    const expCookieValue = expCookie ? expCookie.split(',') : [];
+    expCookieValue.forEach((value) => {
+        const expArray = value.split('_');
+        if (expArray[0] === experimentID) {
+            const [, variantVaule] = expArray;
+            variant = variantVaule;
+        }
+    });
+    return variant;
+}
+
+function getCDNExperimentsObject() {
+    if (BLDR.PortalExperiments) {
+        const cdnExperimentArray = Object.values(BLDR.PortalExperiments).filter(e => e.isCDN === true);
+        return cdnExperimentArray && cdnExperimentArray.length > 0 ? cdnExperimentArray : [];
+    }
+    return [];
+}
+function fireCDNExperimentViewedEvents() {
+    // Only load the experiment JS if there are CDN experiments to process
+    const cdnExperimentArray = getCDNExperimentsObject();
+    if (!cdnExperimentArray.length) return;
+
+    function triggerExperimentViewedEvent(experimentName, experimentID) {
+        if (!experimentID) return;
+        const item = localStorage.getItem('lp_conducted_experiments');
+        const experiments = JSON.parse(item) || {};
+        const expObj = experiments[experimentID] || {};
+        if (!expObj.isMixPanelEventLogged && !expObj.isEventLogged) {
+            const expCookie = BLDR.readCookie('gnxiuykvcje');
+            let variant = getCDNExperimentVariant(experimentID);
+            if (typeof variant !== 'undefined' && variant !== null && Number(variant) > 0) {
+                let variantName = (variant && Number(variant) === 1) ? 'Baseline' : `Variation ${variant}`;
+                if (expCookie != null) {
+                    if (window.TrackEvents && window.analytics) {
+                        BLDR.loadJs(BLDR.CDNHost + BLDR.Portal.cdnexperimentJsUrl);
+                        TrackEvents('Experiment Viewed', {
+                            'Experiment Name': experimentName,
+                            Variation: variant,
+                            'Variation Name': variantName
+                        }, null, false);
+                        if (experiments[experimentID]) {
+                            experiments[experimentID].isMixPanelEventLogged = true;
+                        } else {
+                            experiments[experimentID] = { isMixPanelEventLogged: true };
+                        }
+                        localStorage.setItem('lp_conducted_experiments', JSON.stringify(experiments));
+                    }
+                }
+            }
+        }
+    }
+
+    function processExperiments() {
+        cdnExperimentArray.forEach((experiment) => {
+            triggerExperimentViewedEvent(experiment.name, experiment.id);
+        });
+    }
+
+    // Assign to window.segmentReady for compatibility with analytics scripts
+    window.segmentReady = function() {
+        if (window.TrackEvents && window.analytics) {
+            processExperiments();
+        } else {
+            var segmentLoadTimer = setInterval(function () {
+                if (window.TrackEvents && window.analytics) {
+                    clearInterval(segmentLoadTimer);
+                    processExperiments();
+                }
+            }, 300);
+        }
+    };
+}
+
+function getFeatureSets(featureSets) {
+    if (!featureSets) {
+        featureSets = {};
+    }
+    if (BLDR.IsMobileDevice()) {
+        featureSets.changeTemplateFromPreview = false;
+        featureSets.isFunnelImprovements = false;
+        featureSets.triggerUnsavedPopup = false;
+        featureSets.chooseTemplateTuneUp = BLDR.isLite;
+        featureSets.GPTGeneratedSummary = false;
+        featureSets.singlePageSkinContent = false;
+        featureSets.countrySpecificPlaceHolders = BLDR.isLite ? featureSets.countrySpecificPlaceHolders : featureSets.isFunnelImprovements;
+        featureSets.writingHelp = false;
+        featureSets.closeAlertPopup = false;
+        featureSets.chooseTemplateNameAndSurname = BLDR.isLite;
+        featureSets.showTemplateFilters = BLDR.isLite;
+        featureSets.finalizePageRewamp = false;
+        featureSets.PaperSize = false;
+        featureSets.CLUpSell = false;
+        featureSets.onBoardingTemplatePicker = false;
+        featureSets.chooseTempNameAndPhotoFilter = false;
+        featureSets.showColumnFilters = false;
+        featureSets.showGraphicsFilters = false;
+        featureSets.FinalPageV3UpsellCL = false;
+        featureSets.FinalPageV3UpsellLRR = false;
+        featureSets.htsImproveUxFlow = false;
+    }
+
+
+    if (BLDR.isiOSDevice()) {
+        featureSets.changeTemplateFromPreview = false;
+        featureSets.isFunnelImprovements = false;
+        featureSets.triggerUnsavedPopup = false;
+        featureSets.GPTGeneratedSummary = false;
+        featureSets.countrySpecificPlaceHolders = BLDR.isLite ? featureSets.countrySpecificPlaceHolders : featureSets.isFunnelImprovements;
+        featureSets.writingHelp = false;
+        featureSets.finalizePageRewamp = false;
+        featureSets.PaperSize = false;
+        featureSets.CLUpSell = false;
+        featureSets.onBoardingTemplatePicker = false;
+        featureSets.FinalPageV3UpsellCL = false;
+        featureSets.FinalPageV3UpsellLRR = false;
+    }
+
+    if (BLDR.isIPAD()) {
+        featureSets.changeTemplateFromPreview = false;
+        featureSets.useRendererForCT = !BLDR.isRC ? true : false;
+        featureSets.isFunnelImprovements = true;
+        featureSets.GPTGeneratedSummary = false;
+        featureSets.triggerUnsavedPopup = true;
+        featureSets.singlePageSkinContent = false;
+        featureSets.chooseTemplateTuneUp = BLDR.isLite ? true : false;
+        featureSets.countrySpecificPlaceHolders = BLDR.isLite ? featureSets.countrySpecificPlaceHolders : featureSets.isFunnelImprovements;
+        featureSets.writingHelp = false;
+        featureSets.closeAlertPopup = false;
+        featureSets.CLUpSell = false;
+        featureSets.FinalPageV3UpsellCL = false;
+        featureSets.FinalPageV3UpsellLRR = false;
+        featureSets.htsImproveUxFlow = false;
+    }
+
+    return featureSets;
+}
+// Add class for Safari 15.6 and below (including iOS 15.6 and below)
+BLDR.isSafari15_6andBelow = function () {
+    var ua = window.navigator.userAgent;
+    // Detect Safari (excluding Chrome and Android)
+    var isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    // Match Safari version 13.x, 14.x, and 15.0–15.6
+    var isSafariBelow15_7 = /Version\/(1[3-5](\.[0-6])?(\.\d+)?)[^\d]/.test(ua);
+    // Match iOS 13.x to 15.6
+    var isIOSBelow15_7 = /OS (1[3-5])_([0-6])(_\d)? like Mac OS X/i.test(ua);
+    if ((isSafari && isSafariBelow15_7) || isIOSBelow15_7) {
+        document.body.classList.add('safari15-6-below-browser');
+    }
+};
+// Call this on DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+        BLDR.isSafari15_6andBelow();
+    });
+} else {
+    BLDR.isSafari15_6andBelow();
+}
+
+BLDR.loadLocalCookieConsentScript = function () {
+    if ((BLDR.isRG || BLDR.isRC || BLDR.isLite) && loadCookieConsentScript) {
+        var environment = window.location.host.split('.')[0].replace('-builder', '').replace('-app', '');
+        var apiEnvironment = BLDR.environmentURL || environment;
+        if (apiEnvironment == "local") {
+            var scriptName = (BLDR.isLite) ? `cvgenius-${BLDR.CountrySlug}` : (BLDR.isRG ? "resumegenius" : "resumecompanion");
+            var folderName = BLDR.Portal.portalCd;
+
+            BLDR.loadJs("/files/" + folderName + "/common-blob/" + scriptName + ".cookie-consent.min.js?v=" + versionNumber, true);
+        }
+    }
+};
+
+function loadStyleSheet({ src, tagId, id, type } = {}) {
+    let vh = window.innerHeight;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    if (document.createStyleSheet) document.createStyleSheet(src);
+    else {
+        var stylesheet = document.createElement('link');
+        if (id) stylesheet.id = tagId ? tagId : 'base-style-link';
+        stylesheet.rel = src.includes("fonts.gstatic.com") ? "preload" : 'stylesheet';
+        stylesheet.href = src;
+        src.includes("fonts.gstatic.com") && (stylesheet.as = "font")
+        if (type) stylesheet.type = 'text/css';
+        document.getElementsByTagName('head')[0].appendChild(stylesheet);
+    }
+    return null;
+}
+
+function getWebFontsUrl() {
+    let env = window.location.host.split('.')[0];
+    let webFontsUrl = "";
+    if (env == 'local')
+        webFontsUrl = `${BLDR.CDNHost}/stylesheet`;
+    else
+        webFontsUrl = `${BLDR.CDNHost}/assets/blobcontent/${(isIsoURL() ? "sep/" : "")}${BLDR.Portal.portalCd}/rbg`;
+
+    return webFontsUrl;
+}
+
+function loadWebFonts(callback) {
+    const style = document.createElement('style');
+    let webFontsUrl = getWebFontsUrl();
+
+    style.textContent = `
+        @font-face {
+            font-family: 'Roboto';
+            src: url(${webFontsUrl}/fonts/web-fonts/Roboto-Medium.woff) format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Font Awesome 5 Pro';
+            font-style: normal;
+            font-weight: 300;
+            font-display: block;
+            src: url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-light-300.eot);
+            src: url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-light-300.eot?#iefix) format("embedded-opentype"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-light-300.woff2) format("woff2"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-light-300.woff) format("woff"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-light-300.ttf) format("truetype"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-light-300.svg#fontawesome) format("svg"); 
+        }
+        @font-face {
+            font-family: 'Font Awesome 5 Pro';
+            font-style: normal;
+            font-weight: 400;
+            font-display: block;
+            src: url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-regular-400.eot);
+            src: url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-regular-400.eot?#iefix) format("embedded-opentype"),
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-regular-400.woff2) format("woff2"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-regular-400.woff) format("woff"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-regular-400.ttf) format("truetype"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-regular-400.svg#fontawesome) format("svg"); 
+        }
+        @font-face {
+            font-family: 'Font Awesome 5 Pro';
+            font-style: normal;
+            font-weight: 900;
+            font-display: block;
+            src: url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-solid-900.eot);
+            src: url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-solid-900.eot?#iefix) format("embedded-opentype"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-solid-900.woff2) format("woff2"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-solid-900.woff) format("woff"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-solid-900.ttf) format("truetype"), 
+                 url(${webFontsUrl}/fonts/fa-subsetter/webfonts/fa-solid-900.svg#fontawesome) format("svg"); 
+        }
+    `;
+    document.head.appendChild(style);
+
+    if (callback) {
+        callback();
+    }
+}
+
+function handleSkins() {
+    BLDR.Skins.forEach(function (skin) {
+        var currentYearPlaceholder = "{current_year}";
+        var currentYearValue = new Date().getFullYear();
+        if (skin.name && skin.name.length > 0 && skin.name.indexOf(currentYearPlaceholder) > -1) {
+            skin.name = skin.name.replace(currentYearPlaceholder, currentYearValue);
+        }
+        if (skin.skindefaultname && skin.skindefaultname.length > 0 && skin.skindefaultname.indexOf(currentYearPlaceholder) > -1) {
+            skin.skindefaultname = skin.skindefaultname.replace(currentYearPlaceholder, currentYearValue);
+        }
+        var skinName = skin.skinCD + '.htm';
+        BLDR.getSkinHtml(skinName, true);
+    });
+}
+
+function getApiUrl(versionNumber, url) {
+    var hostAvailable = window.location && window.location.host;
+    var environment = window.location.host.split('.')[0];
+    var configName = "qa";
+    var apiEnvironment = BLDR.environmentURL || environment;
+    var UrlPrefix = BLDR.CountrySlug ? BLDR.CountrySlug + "/" + BLDR.Paths.UrlPrefix : BLDR.Paths.UrlPrefix;
+    var baseUrl = url ? url : "https://@@env." + BLDR.Portal.url + "/" + UrlPrefix + "/bld/v1/";
+    // if (BLDR.CountrySlug && (apiEnvironment == "local" || apiEnvironment == "pseudo")) {
+    //     baseUrl = url ? url : "https://api-qa-pl-embedded-builder." + BLDR.Portal.url + "/api/v1/";
+    // }
+    switch (apiEnvironment) {
+        case "pen":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "pen";
+            AuthCookieName = "SigninAuth_Reg";
+            AuthCoreCookieName = "SigninAuth_Reg_CORE";
+            break;
+        case "loc":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "reg";
+            AuthCookieName = "SigninAuth_Reg";
+            AuthCoreCookieName = "SigninAuth_Reg_CORE";
+            break;
+        case "reg":
+        case "reg-sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "reg";
+            AuthCookieName = "SigninAuth_Reg";
+            AuthCoreCookieName = "SigninAuth_Reg_CORE";
+            break;
+        case "stg":
+        case "stg-sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "stg";
+            break;
+        case "perf":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "perf";
+            break;
+        case "pseudo":
+        case "local":
+            configName = "qa";
+            AuthCookieName = "SigninAuth_QA";
+            AuthCoreCookieName = "SigninAuth_QA_CORE";
+            break;
+        case "local-sep":
+            configName = "qa-sep";
+            AuthCookieName = "SigninAuth_QA";
+            AuthCoreCookieName = "SigninAuth_QA_CORE";
+            break;
+        case "qa":
+        case "qa-sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "qa";
+            AuthCookieName = "SigninAuth_QA";
+            AuthCoreCookieName = "SigninAuth_QA_CORE";
+            break;
+        case "sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "sep";
+            break;
+        case "resumegenius":
+        case "resumecompanion":
+        case "cvgenius":
+            configName = "";
+            break;
+    }
+    var returnUrl;
+    if (configName == "") {
+        returnUrl = baseUrl.replace('@@env.', configName);
+    }
+    else {
+        returnUrl = baseUrl.replace('@@env', configName);
+    }
+    return versionNumber ? returnUrl.replace('v1', versionNumber) : returnUrl;
+}
+function getCustomApiUrl(param) {
+    var hostAvailable = window.location && window.location.host;
+    var environment = window.location.host.split('.')[0];
+    var configName = "qa";
+    var apiEnvironment = BLDR.environmentURL || environment;
+    var UrlPrefix = BLDR.CountrySlug ? BLDR.CountrySlug + "/" + BLDR.Paths.UrlPrefix : BLDR.Paths.UrlPrefix;
+    var baseUrl = "https://@@env." + BLDR.Portal.url + "/" + UrlPrefix + "/rmgnta/api/" + param + "/v1/";
+    switch (apiEnvironment) {
+        case "pen":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "pen";
+            break;
+        case "loc":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "reg";
+            break;
+        case "reg":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "reg";
+            break;
+        case "reg-sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "reg-sep";
+            break;
+        case "stg":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "stg";
+            break;
+        case "stg-sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "stg-sep";
+            break;
+        case "perf":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "perf";
+            break;
+        case "pseudo":
+        case "local":
+            configName = "pseudo";
+            break;
+        case "qa":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "qa";
+            break;
+        case "qa-sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "qa-sep";
+            break;
+        case "sep":
+            configName = hostAvailable ? window.location.host.split('.')[0] : "sep";
+            break;
+        case "resumegenius":
+        case "resumecompanion":
+        case "cvgenius":
+            configName = "";
+            break;
+    }
+    var returnUrl;
+    if (configName == "") {
+        returnUrl = baseUrl.replace('@@env.', configName);
+    }
+    else {
+        returnUrl = baseUrl.replace('@@env', configName);
+    }
+    return returnUrl;
+}
+
+function addExperimentsLocalizedText() {
+    var experimentsList = Object.keys(BLDR.PortalExperiments);
+    if (experimentsList.length > 0) {
+        experimentsList.forEach(function (experiment) {
+            var experimentID = BLDR.PortalExperiments[experiment].id;
+            if (BLDR.ExperimentsLocalization[experimentID]) {
+                Object.assign(BLDR.Localization, BLDR.ExperimentsLocalization[experimentID]);
+            }
+        });
+    }
+
+    if (BLDR.isRG && BLDR.isCVOnRGN) {
+        window.BLDR.Localization = window.BLDR.convertLocalizationForCV(window.BLDR.Localization);
+    }
+}
+
+window.BLDR.convertLocalizationForCV = function (data) {
+    let ignorePropertyList = ["resetPasswordLink", "dashboardRestPasswordLink", "resume_libraryindeed_terms_conditions"]
+    if (data && typeof data === 'object') {
+        for (const property in data) {
+            if (ignorePropertyList.indexOf(property) > -1) {
+                //Handle property specific cases in this block 
+                switch (property) {
+                    case "resume_libraryindeed_terms_conditions":
+                        data["resume_libraryindeed_terms_conditions"] = "By clicking \"Share my CV\" you are indicating that you have read and agree to CV-Library's <a target=\"_blank\" href=\"https://www.resume-library.com/terms\">Terms of Service</a>, and <a target=\"_blank\" href=\"https://www.resume-library.com/privacy\">Privacy</a> and <a target=\"_blank\" href=\"https://www.resume-library.com/privacy\">Cookie Policies</a>";
+                        break;
+                }
+            }
+            else {
+                if (typeof data[property] === 'string') {
+                    data[property] = data[property] ? data[property].replace(/resume/gi, "CV") : data[property];
+                }
+            }
+        }
+    }
+    return data;
+}
+function prefetchFiles(src, callback) {
+    var s, r;
+    r = false;
+    s = document.createElement('link');
+    s.rel = "preload";
+    s.href = src;
+    s.onload = s.onreadystatechange = function () {
+        if (!r && (!this.readyState || this.readyState == 'complete' || this.readyState == 'loaded')) {
+            r = true;
+            callback && callback();
+        }
+    };
+    document.getElementsByTagName('head')[0].appendChild(s);
+}
+
+function setSkinCdFromPortal() {
+    var oldTemplateId = BLDR.getQueryString("template_id");
+    var selectedSkin = null;
+    if (oldTemplateId && BLDR.Skins.length > 0) {
+        selectedSkin = BLDR.Skins.find(function (skin) { return skin.oldId === oldTemplateId; });
+        if (selectedSkin) {
+            BLDR.SkinCdFromPortal = selectedSkin.skinCD;
+        }
+    }
+    var skinCd = BLDR.getQueryString("templatecd");
+    if (skinCd && BLDR.Skins.length > 0) {
+        selectedSkin = BLDR.Skins.find(function (skin) { return skin.skinCD.toLowerCase() === skinCd.toLowerCase(); });
+        if (selectedSkin) {
+            BLDR.SkinCdFromPortal = selectedSkin.skinCD;
+        }
+    }
+    var colorCd = BLDR.getQueryString("colorcd");
+    if (colorCd) {
+        colorCd = decodeURIComponent(BLDR.getQueryString("colorcd"))
+        BLDR.defaultColorCD = colorCd.indexOf('#') > -1 ? colorCd : `#${colorCd}`
+        sessionStorage.setItem('colorCD', BLDR.defaultColorCD)
+    }
+}
+
+function setSummaryFromPortal() {
+    var isSummarySeo = BLDR.getQueryString("flow") === "summary" ? true : false;
+
+    if (isSummarySeo) {
+        if (sessionStorage.getItem("rsgSteps")
+            && JSON.parse(sessionStorage.getItem('rsgSteps'))
+            && typeof JSON.parse(sessionStorage.getItem('rsgSteps')) === 'object') {
+            if (typeof JSON.parse(sessionStorage.getItem('rsgSteps')).summary === 'string'
+                && JSON.parse(sessionStorage.getItem('rsgSteps')).summary == "") {
+                BLDR.SeoSummary = null;
+                BLDR.isSeoSummary = false;
+            } else {
+                BLDR.SeoSummary = JSON.parse(sessionStorage.getItem('rsgSteps')).summary;
+                BLDR.isSeoSummary = isSummarySeo;
+            }
+        }
+
+    }
+
+}
+
+// BEGIN-NOSCAN
+function addNewRelic(applicationId, sampleDenominator, licenceKey) { sampleDenominator = sampleDenominator || 5; var y = Math.floor(Math.random() * 10 + 1); var x = y % sampleDenominator; if (x == 0) { window.NREUM || (NREUM = {}), (__nr_require = (function (t, e, n) { function r(n) { if (!e[n]) { var o = (e[n] = { exports: {} }); t[n][0].call(o.exports, function (e) { var o = t[n][1][e]; return r(o || e); }, o, o.exports); } return e[n].exports; } if ("function" == typeof __nr_require) return __nr_require; for (var o = 0; o < n.length; o++) r(n[o]); return r; })({ 1: [function (t, e, n) { function r(t) { try { c.console && console.log(t); } catch (e) { } } var o, i = t("ee"), a = t(19), c = {}; try { (o = localStorage.getItem("__nr_flags").split(",")), console && "function" == typeof console.log && ((c.console = !0), o.indexOf("dev") !== -1 && (c.dev = !0), o.indexOf("nr_dev") !== -1 && (c.nrDev = !0)); } catch (s) { } c.nrDev && i.on("internal-error", function (t) { r(t.stack); }), c.dev && i.on("fn-err", function (t, e, n) { r(n.stack); }), c.dev && (r("NR AGENT IN DEVELOPMENT MODE"), r("flags: " + a(c, function (t, e) { return t; }).join(", "))); }, {},], 2: [function (t, e, n) { function r(t, e, n, r, o) { try { d ? (d -= 1) : i("err", [o || new UncaughtException(t, e, n)]); } catch (c) { try { i("ierr", [c, s.now(), !0]); } catch (u) { } } return ("function" == typeof f && f.apply(this, a(arguments))); } function UncaughtException(t, e, n) { (this.message = t || "Uncaught error with no additional information"), (this.sourceURL = e), (this.line = n); } function o(t) { i("err", [t, s.now()]); } var i = t("handle"), a = t(20), c = t("ee"), s = t("loader"), f = window.onerror, u = !1, d = 0; (s.features.err = !0), t(1), (window.onerror = r); try { throw new Error(); } catch (p) { "stack" in p && (t(12), t(11), "addEventListener" in window && t(6), s.xhrWrappable && t(13), (u = !0)); } c.on("fn-start", function (t, e, n) { u && (d += 1); }), c.on("fn-err", function (t, e, n) { u && ((this.thrown = !0), o(n)); }), c.on("fn-end", function () { u && !this.thrown && d > 0 && (d -= 1); }), c.on("internal-error", function (t) { i("ierr", [t, s.now(), !0]); }); }, {},], 3: [function (t, e, n) { t("loader").features.ins = !0; }, {},], 4: [function (t, e, n) { function r() { C++, (M = y.hash), (this[u] = b.now()); } function o() { C--, y.hash !== M && i(0, !0); var t = b.now(); (this[l] = ~~this[l] + t - this[u]), (this[d] = t); } function i(t, e) { E.emit("newURL", ["" + y, e]); } function a(t, e) { t.on(e, function () { this[e] = b.now(); }); } var c = "-start", s = "-end", f = "-body", u = "fn" + c, d = "fn" + s, p = "cb" + c, h = "cb" + s, l = "jsTime", m = "fetch", v = "addEventListener", w = window, y = w.location, b = t("loader"); if (w[v] && b.xhrWrappable) { var g = t(9), x = t(10), E = t(8), O = t(6), R = t(12), P = t(7), T = t(13), S = t("ee"), N = S.get("tracer"); t(14), (b.features.spa = !0); var M, j = w[v], C = 0; S.on(u, r), S.on(p, r), S.on(d, o), S.on(h, o), S.buffer([u, d, "xhr-done", "xhr-resolved"]), O.buffer([u]), R.buffer(["setTimeout" + s, "clearTimeout" + c, u]), T.buffer([u, "new-xhr", "send-xhr" + c]), P.buffer([m + c, m + "-done", m + f + c, m + f + s]), E.buffer(["newURL"]), g.buffer([u]), x.buffer(["propagate", p, h, "executor-err", "resolve" + c,]), N.buffer([u, "no-" + u]), a(T, "send-xhr" + c), a(S, "xhr-resolved"), a(S, "xhr-done"), a(P, m + c), a(P, m + "-done"), E.on("pushState-end", i), E.on("replaceState-end", i), j("hashchange", i, !0), j("load", i, !0), j("popstate", function () { i(0, C > 1); }, !0); } }, {},], 5: [function (t, e, n) { function r(t) { } if (window.performance && window.performance.timing && window.performance.getEntriesByType) { var o = t("ee"), i = t("handle"), a = t(12), c = t(11), s = "learResourceTimings", f = "addEventListener", u = "resourcetimingbufferfull", d = "bstResource", p = "resource", h = "-start", l = "-end", m = "fn" + h, v = "fn" + l, w = "bstTimer", y = "pushState", b = t("loader"); (b.features.stn = !0), t(8); var g = NREUM.o.EV; o.on(m, function (t, e) { var n = t[0]; n instanceof g && (this.bstStart = b.now()); }), o.on(v, function (t, e) { var n = t[0]; n instanceof g && i("bst", [n, e, this.bstStart, b.now()]); }), a.on(m, function (t, e, n) { (this.bstStart = b.now()), (this.bstType = n); }), a.on(v, function (t, e) { i(w, [e, this.bstStart, b.now(), this.bstType]); }), c.on(m, function () { this.bstStart = b.now(); }), c.on(v, function (t, e) { i(w, [e, this.bstStart, b.now(), "requestAnimationFrame",]); }), o.on(y + h, function (t) { (this.time = b.now()), (this.startPath = location.pathname + location.hash); }), o.on(y + l, function (t) { i("bstHist", [location.pathname + location.hash, this.startPath, this.time,]); }), f in window.performance && (window.performance["c" + s] ? window.performance[f](u, function (t) { i(d, [window.performance.getEntriesByType(p),]), window.performance["c" + s](); }, !1) : window.performance[f]("webkit" + u, function (t) { i(d, [window.performance.getEntriesByType(p),]), window.performance["webkitC" + s](); }, !1)), document[f]("scroll", r, { passive: !0 }), document[f]("keypress", r, !1), document[f]("click", r, !1); } }, {},], 6: [function (t, e, n) { function r(t) { for (var e = t; e && !e.hasOwnProperty(u);) e = Object.getPrototypeOf(e); e && o(e); } function o(t) { c.inPlace(t, [u, d], "-", i); } function i(t, e) { return t[1]; } var a = t("ee").get("events"), c = t(22)(a, !0), s = t("gos"), f = XMLHttpRequest, u = "addEventListener", d = "removeEventListener"; (e.exports = a), "getPrototypeOf" in Object ? (r(document), r(window), r(f.prototype)) : f.prototype.hasOwnProperty(u) && (o(window), o(f.prototype)), a.on(u + "-start", function (t, e) { var n = t[1], r = s(n, "nr@wrapped", function () { function t() { if ("function" == typeof n.handleEvent) return n.handleEvent.apply(n, arguments); } var e = { object: t, function: n }[typeof n]; return e ? c(e, "fn-", null, e.name || "anonymous") : n; }); this.wrapped = t[1] = r; }), a.on(d + "-start", function (t) { t[1] = this.wrapped || t[1]; }); }, {},], 7: [function (t, e, n) { function r(t, e, n) { var r = t[e]; "function" == typeof r && (t[e] = function () { var t = r.apply(this, arguments); return (o.emit(n + "start", arguments, t), t.then(function (e) { return o.emit(n + "end", [null, e], t), e; }, function (e) { throw (o.emit(n + "end", [e], t), e); })); }); } var o = t("ee").get("fetch"), i = t(19); e.exports = o; var a = window, c = "fetch-", s = c + "body-", f = ["arrayBuffer", "blob", "json", "text", "formData"], u = a.Request, d = a.Response, p = a.fetch, h = "prototype"; u && d && p && (i(f, function (t, e) { r(u[h], e, s), r(d[h], e, s); }), r(a, "fetch", c), o.on(c + "end", function (t, e) { var n = this; e ? e.clone().arrayBuffer().then(function (t) { (n.rxSize = t.byteLength), o.emit(c + "done", [null, e], n); }) : o.emit(c + "done", [t], n); })); }, {},], 8: [function (t, e, n) { var r = t("ee").get("history"), o = t(22)(r); (e.exports = r), o.inPlace(window.history, ["pushState", "replaceState"], "-"); }, {},], 9: [function (t, e, n) { var r = t("ee").get("mutation"), o = t(22)(r), i = NREUM.o.MO; (e.exports = r), i && ((window.MutationObserver = function (t) { return this instanceof i ? new i(o(t, "fn-")) : i.apply(this, arguments); }), (MutationObserver.prototype = i.prototype)); }, {},], 10: [function (t, e, n) { function r(t) { var e = a.context(), n = c(t, "executor-", e), r = new f(n); return ((a.context(r).getCtx = function () { return e; }), a.emit("new-promise", [r, e], e), r); } function o(t, e) { return e; } var i = t(22), a = t("ee").get("promise"), c = i(a), s = t(19), f = NREUM.o.PR; (e.exports = a), f && ((window.Promise = r), ["all", "race"].forEach(function (t) { var e = f[t]; f[t] = function (n) { function r(t) { return function () { a.emit("propagate", [null, !o], i), (o = o || !t); }; } var o = !1; s(n, function (e, n) { Promise.resolve(n).then(r("all" === t), r(!1)); }); var i = e.apply(f, arguments), c = f.resolve(i); return c; }; }), ["resolve", "reject"].forEach(function (t) { var e = f[t]; f[t] = function (t) { var n = e.apply(f, arguments); return (t !== n && a.emit("propagate", [t, !0], n), n); }; }), (f.prototype["catch"] = function (t) { return this.then(null, t); }), (f.prototype = Object.create(f.prototype, { constructor: { value: r }, })), s(Object.getOwnPropertyNames(f), function (t, e) { try { r[e] = f[e]; } catch (n) { } }), a.on("executor-start", function (t) { (t[0] = c(t[0], "resolve-", this)), (t[1] = c(t[1], "resolve-", this)); }), a.on("executor-err", function (t, e, n) { t[1](n); }), c.inPlace(f.prototype, ["then"], "then-", o), a.on("then-start", function (t, e) { (this.promise = e), (t[0] = c(t[0], "cb-", this)), (t[1] = c(t[1], "cb-", this)); }), a.on("then-end", function (t, e, n) { this.nextPromise = n; var r = this.promise; a.emit("propagate", [r, !0], n); }), a.on("cb-end", function (t, e, n) { a.emit("propagate", [n, !0], this.nextPromise); }), a.on("propagate", function (t, e, n) { (this.getCtx && !e) || (this.getCtx = function () { if (t instanceof Promise) var e = a.context(t); return e && e.getCtx ? e.getCtx() : this; }); }), (r.toString = function () { return "" + f; })); }, {},], 11: [function (t, e, n) { var r = t("ee").get("raf"), o = t(22)(r), i = "equestAnimationFrame"; (e.exports = r), o.inPlace(window, ["r" + i, "mozR" + i, "webkitR" + i, "msR" + i], "raf-"), r.on("raf-start", function (t) { t[0] = o(t[0], "fn-"); }); }, {},], 12: [function (t, e, n) { function r(t, e, n) { t[0] = a(t[0], "fn-", null, n); } function o(t, e, n) { (this.method = n), (this.timerDuration = isNaN(t[1]) ? 0 : +t[1]), (t[0] = a(t[0], "fn-", this, n)); } var i = t("ee").get("timer"), a = t(22)(i), c = "setTimeout", s = "setInterval", f = "clearTimeout", u = "-start", d = "-"; (e.exports = i), a.inPlace(window, [c, "setImmediate"], c + d), a.inPlace(window, [s], s + d), a.inPlace(window, [f, "clearImmediate"], f + d), i.on(s + u, r), i.on(c + u, o); }, {},], 13: [function (t, e, n) { function r(t, e) { d.inPlace(e, ["onreadystatechange"], "fn-", c); } function o() { var t = this, e = u.context(t); t.readyState > 3 && !e.resolved && ((e.resolved = !0), u.emit("xhr-resolved", [], t)), d.inPlace(t, y, "fn-", c); } function i(t) { b.push(t), l && (x ? x.then(a) : v ? v(a) : ((E = -E), (O.data = E))); } function a() { for (var t = 0; t < b.length; t++) r([], b[t]); b.length && (b = []); } function c(t, e) { return e; } function s(t, e) { for (var n in t) e[n] = t[n]; return e; } t(6); var f = t("ee"), u = f.get("xhr"), d = t(22)(u), p = NREUM.o, h = p.XHR, l = p.MO, m = p.PR, v = p.SI, w = "readystatechange", y = ["onload", "onerror", "onabort", "onloadstart", "onloadend", "onprogress", "ontimeout",], b = []; e.exports = u; var g = (window.XMLHttpRequest = function (t) { var e = new h(t); try { u.emit("new-xhr", [e], e), e.addEventListener(w, o, !1); } catch (n) { try { u.emit("internal-error", [n]); } catch (r) { } } return e; }); if ((s(h, g), (g.prototype = h.prototype), d.inPlace(g.prototype, ["open", "send"], "-xhr-", c), u.on("send-xhr-start", function (t, e) { r(t, e), i(e); }), u.on("open-xhr-start", r), l)) { var x = m && m.resolve(); if (!v && !m) { var E = 1, O = document.createTextNode(E); new l(a).observe(O, { characterData: !0 }); } } else f.on("fn-end", function (t) { (t[0] && t[0].type === w) || a(); }); }, {},], 14: [function (t, e, n) { function r(t) { var e = this.params, n = this.metrics; if (!this.ended) { this.ended = !0; for (var r = 0; r < d; r++) t.removeEventListener(u[r], this.listener, !1); if (!e.aborted) { if (((n.duration = a.now() - this.startTime), 4 === t.readyState)) { e.status = t.status; var i = o(t, this.lastSize); if ((i && (n.rxSize = i), this.sameOrigin)) { var s = t.getResponseHeader("X-NewRelic-App-Data"); s && (e.cat = s.split(", ").pop()); } } else e.status = 0; (n.cbTime = this.cbTime), f.emit("xhr-done", [t], t), c("xhr", [e, n, this.startTime]); } } } function o(t, e) { var n = t.responseType; if ("json" === n && null !== e) return e; var r = "arraybuffer" === n || "blob" === n || "json" === n ? t.response : t.responseText; return l(r); } function i(t, e) { var n = s(e), r = t.params; (r.host = n.hostname + ":" + n.port), (r.pathname = n.pathname), (t.sameOrigin = n.sameOrigin); } var a = t("loader"); if (a.xhrWrappable) { var c = t("handle"), s = t(15), f = t("ee"), u = ["load", "error", "abort", "timeout"], d = u.length, p = t("id"), h = t(18), l = t(17), m = window.XMLHttpRequest; (a.features.xhr = !0), t(13), f.on("new-xhr", function (t) { var e = this; (e.totalCbs = 0), (e.called = 0), (e.cbTime = 0), (e.end = r), (e.ended = !1), (e.xhrGuids = {}), (e.lastSize = null), (h && (h > 34 || h < 10)) || window.opera || t.addEventListener("progress", function (t) { e.lastSize = t.loaded; }, !1); }), f.on("open-xhr-start", function (t) { (this.params = { method: t[0] }), i(this, t[1]), (this.metrics = {}); }), f.on("open-xhr-end", function (t, e) { "loader_config" in NREUM && "xpid" in NREUM.loader_config && this.sameOrigin && e.setRequestHeader("X-NewRelic-ID", NREUM.loader_config.xpid); }), f.on("send-xhr-start", function (t, e) { var n = this.metrics, r = t[0], o = this; if (n && r) { var i = l(r); i && (n.txSize = i); } (this.startTime = a.now()), (this.listener = function (t) { try { "abort" === t.type && (o.params.aborted = !0), ("load" !== t.type || (o.called === o.totalCbs && (o.onloadCalled || "function" != typeof e.onload))) && o.end(e); } catch (n) { try { f.emit("internal-error", [n]); } catch (r) { } } }); for (var c = 0; c < d; c++) e.addEventListener(u[c], this.listener, !1); }), f.on("xhr-cb-time", function (t, e, n) { (this.cbTime += t), e ? (this.onloadCalled = !0) : (this.called += 1), this.called !== this.totalCbs || (!this.onloadCalled && "function" == typeof n.onload) || this.end(n); }), f.on("xhr-load-added", function (t, e) { var n = "" + p(t) + !!e; this.xhrGuids && !this.xhrGuids[n] && ((this.xhrGuids[n] = !0), (this.totalCbs += 1)); }), f.on("xhr-load-removed", function (t, e) { var n = "" + p(t) + !!e; this.xhrGuids && this.xhrGuids[n] && (delete this.xhrGuids[n], (this.totalCbs -= 1)); }), f.on("addEventListener-end", function (t, e) { e instanceof m && "load" === t[0] && f.emit("xhr-load-added", [t[1], t[2]], e); }), f.on("removeEventListener-end", function (t, e) { e instanceof m && "load" === t[0] && f.emit("xhr-load-removed", [t[1], t[2]], e); }), f.on("fn-start", function (t, e, n) { e instanceof m && ("onload" === n && (this.onload = !0), ("load" === (t[0] && t[0].type) || this.onload) && (this.xhrCbStart = a.now())); }), f.on("fn-end", function (t, e) { this.xhrCbStart && f.emit("xhr-cb-time", [a.now() - this.xhrCbStart, this.onload, e], e); }); } }, {},], 15: [function (t, e, n) { e.exports = function (t) { var e = document.createElement("a"), n = window.location, r = {}; (e.href = t), (r.port = e.port); var o = e.href.split("://"); !r.port && o[1] && (r.port = o[1].split("/")[0].split("@@").pop().split(":")[1]), (r.port && "0" !== r.port) || (r.port = "https" === o[0] ? "443" : "80"), (r.hostname = e.hostname || n.hostname), (r.pathname = e.pathname), (r.protocol = o[0]), "/" !== r.pathname.charAt(0) && (r.pathname = "/" + r.pathname); var i = !e.protocol || ":" === e.protocol || e.protocol === n.protocol, a = e.hostname === document.domain && e.port === n.port; return (r.sameOrigin = i && (!e.hostname || a)), r; }; }, {},], 16: [function (t, e, n) { function r() { } function o(t, e, n) { return function () { return (i(t, [f.now()].concat(c(arguments)), e ? null : this, n), e ? void 0 : this); }; } var i = t("handle"), a = t(19), c = t(20), s = t("ee").get("tracer"), f = t("loader"), u = NREUM; "undefined" == typeof window.newrelic && (newrelic = u); var d = ["setPageViewName", "setCustomAttribute", "setErrorHandler", "finished", "addToTrace", "inlineHit", "addRelease",], p = "api-", h = p + "ixn-"; a(d, function (t, e) { u[e] = o(p + e, !0, "api"); }), (u.addPageAction = o(p + "addPageAction", !0)), (u.setCurrentRouteName = o(p + "routeName", !0)), (e.exports = newrelic), (u.interaction = function () { return new r().get(); }); var l = (r.prototype = { createTracer: function (t, e) { var n = {}, r = this, o = "function" == typeof e; return (i(h + "tracer", [f.now(), t, n], r), function () { if ((s.emit((o ? "" : "no-") + "fn-start", [f.now(), r, o], n), o)) try { return e.apply(this, arguments); } finally { s.emit("fn-end", [f.now()], n); } }); }, }); a("setName,setAttribute,save,ignore,onEnd,getContext,end,get".split(","), function (t, e) { l[e] = o(h + e); }), (newrelic.noticeError = function (t) { "string" == typeof t && (t = new Error(t)), i("err", [t, f.now()]); }); }, {},], 17: [function (t, e, n) { e.exports = function (t) { if ("string" == typeof t && t.length) return t.length; if ("object" == typeof t) { if ("undefined" != typeof ArrayBuffer && t instanceof ArrayBuffer && t.byteLength) return t.byteLength; if ("undefined" != typeof Blob && t instanceof Blob && t.size) return t.size; if (!("undefined" != typeof FormData && t instanceof FormData)) try { return JSON.stringify(t).length; } catch (e) { return; } } }; }, {},], 18: [function (t, e, n) { var r = 0, o = navigator.userAgent.match(/Firefox[\/\s](\d+\.\d+)/); o && (r = +o[1]), (e.exports = r); }, {},], 19: [function (t, e, n) { function r(t, e) { var n = [], r = "", i = 0; for (r in t) o.call(t, r) && ((n[i] = e(r, t[r])), (i += 1)); return n; } var o = Object.prototype.hasOwnProperty; e.exports = r; }, {},], 20: [function (t, e, n) { function r(t, e, n) { e || (e = 0), "undefined" == typeof n && (n = t ? t.length : 0); for (var r = -1, o = n - e || 0, i = Array(o < 0 ? 0 : o); ++r < o;) i[r] = t[e + r]; return i; } e.exports = r; }, {},], 21: [function (t, e, n) { e.exports = { exists: "undefined" != typeof window.performance && window.performance.timing && "undefined" != typeof window.performance.timing.navigationStart, }; }, {},], 22: [function (t, e, n) { function r(t) { return !(t && t instanceof Function && t.apply && !t[a]); } var o = t("ee"), i = t(20), a = "nr@original", c = Object.prototype.hasOwnProperty, s = !1; e.exports = function (t, e) { function n(t, e, n, o) { function nrWrapper() { var r, a, c, s; try { (a = this), (r = i(arguments)), (c = "function" == typeof n ? n(r, a) : n || {}); } catch (f) { p([f, "", [r, a, o], c]); } u(e + "start", [r, a, o], c); try { return (s = t.apply(a, r)); } catch (d) { throw (u(e + "err", [r, a, d], c), d); } finally { u(e + "end", [r, a, s], c); } } return r(t) ? t : (e || (e = ""), (nrWrapper[a] = t), d(t, nrWrapper), nrWrapper); } function f(t, e, o, i) { o || (o = ""); var a, c, s, f = "-" === o.charAt(0); for (s = 0; s < e.length; s++) (c = e[s]), (a = t[c]), r(a) || (t[c] = n(a, f ? c + o : o, i, c)); } function u(n, r, o) { if (!s || e) { var i = s; s = !0; try { t.emit(n, r, o, e); } catch (a) { p([a, n, r, o]); } s = i; } } function d(t, e) { if (Object.defineProperty && Object.keys) try { var n = Object.keys(t); return (n.forEach(function (n) { Object.defineProperty(e, n, { get: function () { return t[n]; }, set: function (e) { return (t[n] = e), e; }, }); }), e); } catch (r) { p([r]); } for (var o in t) c.call(t, o) && (e[o] = t[o]); return e; } function p(e) { try { t.emit("internal-error", e); } catch (n) { } } return t || (t = o), (n.inPlace = f), (n.flag = a), n; }; }, {},], ee: [function (t, e, n) { function r() { } function o(t) { function e(t) { return t && t instanceof r ? t : t ? s(t, c, i) : i(); } function n(n, r, o, i) { if (!p.aborted || i) { t && t(n, r, o); for (var a = e(o), c = l(n), s = c.length, f = 0; f < s; f++) c[f].apply(a, r); var d = u[y[n]]; return d && d.push([b, n, r, a]), a; } } function h(t, e) { w[t] = l(t).concat(e); } function l(t) { return w[t] || []; } function m(t) { return (d[t] = d[t] || o(n)); } function v(t, e) { f(t, function (t, n) { (e = e || "feature"), (y[n] = e), e in u || (u[e] = []); }); } var w = {}, y = {}, b = { on: h, emit: n, get: m, listeners: l, context: e, buffer: v, abort: a, aborted: !1, }; return b; } function i() { return new r(); } function a() { (u.api || u.feature) && ((p.aborted = !0), (u = p.backlog = {})); } var c = "nr@context", s = t("gos"), f = t(19), u = {}, d = {}, p = (e.exports = o()); p.backlog = u; }, {},], gos: [function (t, e, n) { function r(t, e, n) { if (o.call(t, e)) return t[e]; var r = n(); if (Object.defineProperty && Object.keys) try { return (Object.defineProperty(t, e, { value: r, writable: !0, enumerable: !1, }), r); } catch (i) { } return (t[e] = r), r; } var o = Object.prototype.hasOwnProperty; e.exports = r; }, {},], handle: [function (t, e, n) { function r(t, e, n, r) { o.buffer([t], r), o.emit(t, e, n); } var o = t("ee").get("handle"); (e.exports = r), (r.ee = o); }, {},], id: [function (t, e, n) { function r(t) { var e = typeof t; return !t || ("object" !== e && "function" !== e) ? -1 : t === window ? 0 : a(t, i, function () { return o++; }); } var o = 1, i = "nr@id", a = t("gos"); e.exports = r; }, {},], loader: [function (t, e, n) { function r() { if (!x++) { var t = (g.info = NREUM.info), e = p.getElementsByTagName("script")[0]; if ((setTimeout(u.abort, 3e4), !(t && t.licenseKey && t.applicationID && e))) return u.abort(); f(y, function (e, n) { t[e] || (t[e] = n); }), s("mark", ["onload", a() + g.offset], null, "api"); var n = p.createElement("script"); (n.src = "https://" + t.agent), e.parentNode.insertBefore(n, e); } } function o() { "complete" === p.readyState && i(); } function i() { s("mark", ["domContent", a() + g.offset], null, "api"); } function a() { return E.exists && performance.now ? Math.round(performance.now()) : (c = Math.max(new Date().getTime(), c)) - g.offset; } var c = new Date().getTime(), s = t("handle"), f = t(19), u = t("ee"), d = window, p = d.document, h = "addEventListener", l = "attachEvent", m = d.XMLHttpRequest, v = m && m.prototype; NREUM.o = { ST: setTimeout, SI: d.setImmediate, CT: clearTimeout, XHR: m, REQ: d.Request, EV: d.Event, PR: d.Promise, MO: d.MutationObserver, }; var w = "" + location, y = { beacon: "bam.nr-data.net", errorBeacon: "bam.nr-data.net", agent: "js-agent.newrelic.com/nr-spa-1044.min.js", }, b = m && v && v[h] && !/CriOS/.test(navigator.userAgent), g = (e.exports = { offset: c, now: a, origin: w, features: {}, xhrWrappable: b, }); t(16), p[h] ? (p[h]("DOMContentLoaded", i, !1), d[h]("load", r, !1)) : (p[l]("onreadystatechange", o), d[l]("onload", r)), s("mark", ["firstbyte", c], null, "api"); var x = 0, E = t(21); }, {},], }, {}, ["loader", 2, 14, 5, 3, 4])); NREUM.info = { beacon: "bam.nr-data.net", errorBeacon: "bam.nr-data.net", licenseKey: licenceKey, applicationID: applicationId, sa: 1, }; } }  // NOSONAR
+// END-NOSCAN
+
+function downLoadAccountsJs() {
+    if (window.BLDR.Portal && window.BLDR.Portal.downLoadAccountsLoginJs) {
+        // create guest user
+        var divLoginWidget = document.getElementById('divLoginWidget');
+        if (divLoginWidget) {
+            divLoginWidget.setAttribute("data-targetDomain", window.BLDR.Paths.AccountsURL);
+            divLoginWidget.setAttribute("data-productCode", window.BLDR.PortalSettings.ConfigureProductCd);
+            divLoginWidget.setAttribute("data-portalCode", window.BLDR.PortalSettings.ConfigurePortalCd);
+        }
+        var accountsUrl = window.BLDR.Paths.AccountsURL + "/scripts/app/signin.min.js";
+        if (versionNumber != "1.0.0") {
+            accountsUrl = accountsUrl + "?v=" + versionNumber;
+            if (BLDR.CultureCD && BLDR.isEUPortal) {
+                accountsUrl = accountsUrl + "&cultureslug=" + BLDR.CultureCD;
+            }
+        }
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = accountsUrl;
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'accounts-js'));
+    }
+}
+
+function loadFreshChat() {
+    var path = BLDR.CDNHost + "/assets" + window.BLDR.Paths.ResourcePath;
+    BLDR.loadJs(path + "externals/freshchat/chat.min.js?v=" + versionNumber, true);
+}
+
+function loadZendeskChat() {
+    var path = BLDR.CDNHost + "/assets" + window.BLDR.Paths.ResourcePath;
+    BLDR.loadJs(path + "externals/zendesk/chat.min.js?v=" + versionNumber, true);
+}
+
+function initializeMsgUtil(urlETE, bodyETE, msgUtilKeyword, msgUtilYear, msgUtilMonth, msgUtilDate, resolve) {
+    if (urlETE || bodyETE) {
+        var msgUtilInterval = setInterval(function () {
+            if (typeof MsgUtil !== "undefined" && MsgUtil) {
+                clearInterval(msgUtilInterval);
+                if (!MsgUtil.isInitializationDone && MsgUtil.sRV) {
+                    MsgUtil.sRV(msgUtilKeyword, msgUtilYear, msgUtilMonth, msgUtilDate);
+                }
+                if (bodyETE) {
+                    window.globalCompVars.EnableETEEncryption = true;
+                }
+                if (urlETE) {
+                    window.globalCompVars.EnableUrlETEEncryption = true;
+                    window.globalCompVars.urlPrefixToSkipInEncoding = BLDR.CountrySlug ? BLDR.CountrySlug + "/" + BLDR.Paths.UrlPrefix : BLDR.Paths.UrlPrefix;
+                }
+                BLDR.isRG && !isIsoURL() && isoRedirect();
+                getCountries();
+                claimsAndCountryClaimsPromiseCalls(resolve);
+            }
+        }, 100);
+
+    }
+    else {
+        window.globalCompVars.EnableETEEncryption = false;
+        window.globalCompVars.EnableUrlETEEncryption = false;
+        BLDR.isRG && !isIsoURL() && isoRedirect();
+        getCountries();
+        claimsAndCountryClaimsPromiseCalls(resolve);
+    }
+}
+
+function claimsAndCountryClaimsPromiseCalls(resolve) {
+    var claimsPromise = new Promise(function (resolve, reject) {
+        if (BLDR.UserClaims && BLDR.UserClaims.user_uid) {
+            resolve();
+        }
+        else {
+            window.BLDR.getClaims(handleClaims, resolve);
+        }
+    });
+
+    var countryDetailsPromise = new Promise(function (resolve, reject) {
+        setCountryDetails(resolve);
+    });
+
+    Promise.all([claimsPromise, countryDetailsPromise]).then(function (data) {
+        if (resolve) {
+            BLDR.isRG && !isIsoURL() && isoRedirect();
+            resolve("")
+        }
+    });
+}
+
+function createGuestUser(resolve) {
+    if (typeof SIGNIN == "object" && typeof SIGNIN.Accounts.createGuest == 'function') {
+        window.BLDR.createUserCallCounter++;
+        clearTimeout(window.BLDR.createUserTimer);
+        window.BLDR.createUserTimer = setTimeout(function () {
+            window.BLDR.createUserCallCounter = 0;
+        }, window.BLDR.loopTimeGapInSec * 1000);
+        if (window.BLDR.createUserCallCounter > window.BLDR.maxloopCount) {
+            clearAndRedirect("/?forceRedirect=StuckInUserCreation");
+        }
+        isAccUserCalled = true;
+        SIGNIN.Accounts.createGuest(window.BLDR.PortalSettings.ConfigureProductCd, null, location.href).then(function (data) {
+            clearInterval(createGuestUserTimer);
+            var guestUserClaims = data && data.claims && data.claims.user_uid === data.GuestUserID ? JSON.stringify(data.claims) : null;
+            // if (resolve) resolve("");
+            postGuestCreated(data.GuestUserID, guestUserClaims ? 'claim' : null, guestUserClaims, resolve);
+        }, function (error) {
+            clearAndRedirect("/?forceRedirect=StuckInUserCreation");
+            clearInterval(createGuestUserTimer);
+        });
+        clearInterval(createGuestUserTimer);
+    }
+}
+
+function postGuestCreated(userUID, claimCall, guestUserClaims, resolve) {
+    window.BLDR.userId = userUID;
+    if (claimCall == null) {
+        window.BLDR.getClaims(handleClaims, resolve);
+    }
+    else {
+        clearInterval(postGuestUserTimer);
+        if (guestUserClaims) {
+
+            handleClaims(guestUserClaims, resolve);
+        }
+        postGuestUserTimer = setInterval(function () {
+            handlePostGuestCreated();
+        }, 200);
+    }
+}
+
+function getGAClientId() {
+    var clientId = "";
+    window.ga && window.ga(function (tracker) {
+        clientId = tracker.get('clientId');
+    });
+    return clientId;
+}
+
+function handlePostGuestCreated() {
+    if (window.appEntry && postGuestCreatedCalled == false && BLDR.UserClaims && BLDR.UserClaims.user_uid) {
+        postGuestCreatedCalled = true;
+        clearInterval(postGuestUserTimer);
+        if (window.appEntry.isPostGuestUserCreationProcessingCalled == false) {
+            window.appEntry.postGuestUserCreationProcessing();
+        }
+        if (isHandlePostPageLoadCalled == false) {
+            handlePostPageLoad();
+        }
+    }
+}
+
+function handleClaims(result, resolve) {
+    BLDR.UserClaims = JSON.parse(result);
+    if (BLDR.UserClaims) {
+        BLDR.UserClaims.isProxyUser = BLDR.UserClaims.proxy_user && BLDR.UserClaims.proxy_user.toLowerCase() === "true" ? true : false;
+        BLDR.UserClaims.countryCode = BLDR.UserClaims.country_cd ? BLDR.UserClaims.country_cd : "";
+        BLDR.UserClaims.firstName = BLDR.UserClaims.firstName ? BLDR.UserClaims.firstName : "";
+        BLDR.UserClaims.lastName = BLDR.UserClaims.lastName ? BLDR.UserClaims.lastName : "";
+        BLDR.UserClaims.email = BLDR.UserClaims.email ? BLDR.UserClaims.email : "";
+        delete BLDR.UserClaims.country_cd;
+        delete BLDR.UserClaims.proxy_user;
+        delete BLDR.UserClaims.app_id;
+        delete BLDR.UserClaims.client_cd;
+        delete BLDR.UserClaims.client_id;
+    }
+    var cookieEnabledCheck = navigator.cookieEnabled;
+    if (BLDR.UserClaims && BLDR.UserClaims.user_uid != null && BLDR.UserClaims.user_uid != '') {
+        window.BLDR.userId = BLDR.UserClaims.user_uid;
+    }
+    if (cookieEnabledCheck) {
+        window.BLDR.isloggedIn = (BLDR.UserClaims.role != "User") ? false : true;
+        if (BLDR.isBaseRoute) {
+            if (BLDR.UserClaims.role == "Guest" && isAccUserCalled) {
+                postGuestCreated(window.BLDR.userId, 'claim');
+            }
+        }
+        else if (!BLDR.isBaseRoute && BLDR.UserClaims.role == "Guest" && isAccUserCalled) {
+            const isOopsRoute = (location.pathname.indexOf(BLDR.Paths.BasePath) == -1 ||
+                location.pathname.indexOf(BLDR.Paths.BasePath + BLDR.Portal.oopsPage) >= 0);
+            if (!isOopsRoute) { window.location = window.BLDR.Paths.BasePath; }
+        }
+    }
+    else if (window.BLDR.Portal && window.BLDR.Portal.downLoadAccountsLoginJs) {
+        if (window.BLDR.userId == null || window.BLDR.userId == "") {
+            if (isAccUserCalled) {
+                // redirect to LP.
+                clearAndRedirect("/?forceRedirect=claimNotFound");
+            } else {
+                window.BLDR.createGuestUser();
+            }
+        }
+        else {
+            postGuestCreated(window.BLDR.userId, 'claim');
+        }
+    }
+    if (resolve) {
+        resolve("");
+    }
+}
+function isSessionStorageSupported() {
+    try {
+        var testKey = 'test', storage = window.sessionStorage;
+        storage.setItem(testKey, '1');
+        storage.removeItem(testKey);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+function clearAndRedirect(redirectPath) {
+    if (!isRedirectDone) {
+        isRedirectDone = true;
+        window.BLDR.delete_cookie(AuthCookieName, window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie(AuthCoreCookieName, window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("userinf", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("UserStatus", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("testuser", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("guestUserId", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("DocumentID", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("runtest", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("useraction", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("tagcookie", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("guestUserId");
+        window.BLDR.delete_cookie("ipstatecd", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("ipcountrycd", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("lr_user", window.BLDR.Portal.cookieDomain);
+        window.BLDR.delete_cookie("env", window.BLDR.Portal.cookieDomain);
+        if (window.indexedDB) {
+            window.indexedDB.deleteDatabase("localforage");
+        }
+        if (isSessionStorageSupported()) {
+            sessionStorage.removeItem("SUSC");
+            sessionStorage.removeItem("common");
+            sessionStorage.removeItem('userSelectTab');
+            sessionStorage.removeItem('WP_FLOW_TYPE');
+        }
+        localStorage.removeItem('userTnCAgreement');
+        window.location = redirectPath;
+    }
+}
+
+function getCountryFromGeoCookie() {
+    const geoRegion = decodeURIComponent(window.BLDR.readCookie('x-georegion'));
+
+    if (!geoRegion || geoRegion === "null" || geoRegion === "undefined") {
+        return null;
+    }
+    else {
+        const [val, country, regionCode] = geoRegion.split(",");
+        return country;
+    }
+}
+
+function setCountryDetails(resolve) {
+    callAjax(window.BLDR.Paths.BaseApiUrl + 'user/countryclaims/', "GET", true, window.globalCompVars.EnableETEEncryption, window.globalCompVars.EnableUrlETEEncryption, true, function (data) {
+        if (data) {
+            let countryData = JSON.parse(data);
+            if (countryData && countryData.countryCode) {
+                BLDR.countryDetails = JSON.parse(data);
+                // BLDR.countryDetails = JSON.parse("{\"countryCode\":\"GB\",\"continentCode\":\"NA\",\"isEuropianContinent\":false,\"isEEACountry\":false,\"city\":\"Chicago\",\"state\":\"IL\",\"zip\":\"60602\",\"ip\":\"191.96.97.58\"}");
+                // BLDR.countryDetails = JSON.parse("{\"countryCode\":\"US\",\"continentCode\":\"NA\",\"isEuropianContinent\":false,\"isEEACountry\":false,\"city\":\"NewYork\",\"state\":\"NY\",\"zip\":\"10007\",\"ip\":\"206.71.50.230\"}");
+                if (!BLDR.isCVG && BLDR.countryDetails.countryCode != "US") {
+                    BLDR.featureSets.CLUpSell = false;
+                }
+                resolve && resolve();
+            }
+            else {
+                setCountryDetailsFromDefault(resolve);
+            }
+        }
+        else {
+            setCountryDetailsFromDefault(resolve);
+        }
+    });
+}
+
+
+function setCountryDetailsFromDefault(resolve) {
+    let defaultCountryClaim = { ...BLDR.countryDetails };
+    let countryCodeFromCookie = getCountryFromGeoCookie();
+    defaultCountryClaim.countryCode = countryCodeFromCookie
+        ? countryCodeFromCookie
+        : window.BLDR.defaultCountryCode;
+
+    BLDR.countryDetails = defaultCountryClaim;
+    resolve && resolve();
+
+}
+
+function handlePostPageLoad() {
+    isHandlePostPageLoadCalled = true;
+    try {
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = BLDR.VisitorApiSetting.JSURL;
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'visitor-jssdk'));
+    }
+    catch (e) {
+        console.log("Visitor sdk load failed");
+    }
+    clearInterval(trackingApiTimer);
+    trackingApiTimer = setInterval(callTrackingApi, 200);
+
+    // BLDR.loadSkinFiles();
+    if (!BLDR.isRGNCO) {
+        BLDR.loadEcomPrefetchScript()
+    };
+    // BLDR.loadJs(BLDR.Paths.ResourcePath + "scripts/es6/es6-shim.min.js", true, polyfillArrayFrom, true);
+
+    // setTimeout(() => {
+    //     logRocket_GTM_Script();
+    // }, 1000);
+}
+
+function callTrackingApi() {
+    if (typeof SN != 'undefined') {
+        SN.SnTr({ code: { pcode: BLDR.PortalSettings.ConfigurePortalCd, prdcode: BLDR.PortalSettings.ConfigureProductCd }, incflg: { ua: true, go: true } });
+        clearInterval(trackingApiTimer);
+    }
+}
+
+
+window.loadJsWithKey = function (src, id, key) {
+    var f = document.createElement('script');
+    f.setAttribute("src", src);
+    f.setAttribute("id", id);
+    f.setAttribute("data-app-key", key);
+    if (typeof f != "undefined")
+        document.getElementsByTagName("head")[0].appendChild(f);
+}
+
+window.setUpGoogleUploadDropBox = function () {
+    if (BLDR.dropboxPickerInfo && BLDR.dropboxPickerInfo.dropBoxDriveKey) {
+        loadJsWithKey("https://www.dropbox.com/static/api/2/dropins.js", "dropboxjs", BLDR.dropboxPickerInfo.dropBoxDriveKey);
+    }
+
+    BLDR.loadJs("https://apis.google.com/js/api.js");
+    BLDR.Portal.loadGoogleAccountJs === true && BLDR.loadJs("https://accounts.google.com/gsi/client");
+
+}
+
+BLDR.loadJs = function (src, async, callback, crossorigin) {
+    var s,
+        r,
+        t;
+    r = false;
+    s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.src = src;
+    if (crossorigin == true) {
+        s.crossOrigin = 'anonymous';
+    }
+    s.async = (async != null && async != undefined) ? async : true;
+    s.onload = s.onreadystatechange = function () {
+        if (!r && (!this.readyState || this.readyState == 'complete' || this.readyState == 'loaded')) {
+            r = true;
+            callback && callback();
+        }
+    };
+    t = document.getElementsByTagName('script')[0];
+    t.parentNode.insertBefore(s, t);
+}
+
+function isIsoURL() {
+    if (window.location.href && window.location.href.toLowerCase().indexOf('sep') > -1) {
+        return true;
+    }
+    return false;
+};
+
+function handleISORedirect(result, resolve) {
+    if (result) {
+        result = JSON.parse(result);
+        if (result.data && result.data.isHoldOut) {
+            if (!skipISO) {
+                BLDR.redirectToISO();
+            } else {
+                resolve && resolve();
+            }
+        } else {
+            resolve && resolve();
+        }
+    } else {
+        resolve && resolve();
+    }
+}
+
+function isValidJson(str) {
+    if (typeof str !== 'string') return false;
+    try {
+        JSON.parse(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+function isoRedirect(resolve, reject) {
+    {
+        var isoUser = window.BLDR.readCookie('sep');
+        var isoLayerID =
+            BLDR.isolation_layer_id || 'E71928D9-5827-42EC-833A-3929639360C2';
+
+        var _uiLayeruid = isSessionStorageSupported()
+            ? (localStorage.getItem('nhejydjfvnp') // uiexp_visitor_layeruid 
+                || localStorage.getItem('kxyynykceur')) // visitor_layer uid
+            : null;
+
+        if (_uiLayeruid && isValidJson(_uiLayeruid)) {
+            _uiLayeruid = JSON.parse(_uiLayeruid);
+        }
+
+        if (isoUser) {
+            if (isoUser == '1') {
+                BLDR.redirectToISO();
+            }
+        } else if (_uiLayeruid && _uiLayeruid.LayerUid) {
+            if (_uiLayeruid.LayerUid.toUpperCase() == isoLayerID.toUpperCase()) {
+                BLDR.redirectToISO();
+            }
+        } else {
+            var _vstr = window.BLDR.readCookie('_snt');
+            if (_vstr) {
+                var portalCD = BLDR.Portal.portalCd ? BLDR.Portal.portalCd.toUpperCase() : 'RGN';
+                var assignLayerURL =
+                    'participants/' +
+                    _vstr +
+                    '/experiments/assignlayer?portalCd=' +
+                    portalCD +
+                    '&participantType=VSTR';
+                callAjax(window.BLDR.Paths.BaseApiUrl + assignLayerURL, 'POST', true, window.globalCompVars.EnableETEEncryption, window.globalCompVars.EnableUrlETEEncryption, false, handleISORedirect, resolve);
+            } else {
+
+                resolve && resolve();
+            }
+        }
+    }
+};
+
+
+BLDR.redirectToISO = function () {
+    var url = window.location.href;
+    if (url) {
+        var environment = window.location.host.split('.')[0];
+        let parts = window.location.host.split('.');
+        // Check if the hostname has at least two parts
+        if (parts.length >= 3) {
+            url = url.replace(environment, BLDR.isolation_replaceEnv);
+        } else {
+            url = url.replace(environment, BLDR.isolation_replaceEnv + "." + environment);
+        }
+
+        if (!window.isLocal && !skipISO) {
+            BLDR.createCookie(ISOCookieName, '1');
+
+            var redirectInterval;
+            // Clear any existing interval before setting a new one
+            if (redirectInterval) {
+                clearInterval(redirectInterval);
+            }
+            var userStatus = BLDR.readCookie_User_status();
+            if (!userStatus) {
+                // Set interval for redirection only if the userinf cookie is present
+                redirectInterval = setInterval(() => {
+                    if (BLDR.readCookie_User_status()) {
+                        clearInterval(redirectInterval);
+                        window.location.replace(url);
+                    } else {
+                        console.log("userinf cookie not found. Retrying...");
+                    }
+                }, 100);
+            }
+            else {
+                window.location.replace(url);
+            }
+        }
+    }
+};
+
+function callAjax(url, method, async, enableETE, enableUrlEncoding, withCredentials, callback, resolve, data) {
+    var xmlhttp = new XMLHttpRequest();     // compatible with IE7+, Firefox, Chrome, Opera, Safari
+    var urlPromise = Promise.resolve(url);
+    if (withCredentials) {
+        xmlhttp.withCredentials = true;
+    }
+    xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 0) {
+            if (resolve) {
+                callback('', resolve);
+            }
+            else {
+                callback('');
+            }
+        }
+    };
+    xmlhttp.onload = function () {
+
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            if (callback) {
+                var responseText = xmlhttp.responseText;
+                if (enableETE) {
+                    MsgUtil.dcrp(responseText).then(function (decResp) {
+                        responseText = decResp;
+                        if (resolve) {
+                            callback(responseText, resolve);
+                        }
+                        else {
+                            callback(responseText);
+                        }
+                    });
+                }
+                else if (resolve) {
+                    callback(responseText, resolve);
+                }
+                else {
+                    callback(responseText);
+                }
+            }
+        }
+    };
+    if (enableUrlEncoding) {
+        urlPromise = new Promise(function (accept, reject) {
+            var isUrlPrefixPartPresent = false, urlPart = "";
+            var urlPrefixToSkipInEncoding = window.globalCompVars.urlPrefixToSkipInEncoding || "";
+            if (isUrlAbsolute(url)) {
+                var urlObj = new URL(url);
+                urlPart = urlObj.pathname + urlObj.search;
+                if (urlPrefixToSkipInEncoding != null && urlPrefixToSkipInEncoding != "") {
+                    if (urlPart.startsWith(urlPrefixToSkipInEncoding)) {
+                        urlPart = urlPart.substr(urlPrefixToSkipInEncoding.length);
+                        isUrlPrefixPartPresent = true;
+                    }
+                    else if (urlPart.startsWith("/" + urlPrefixToSkipInEncoding)) {
+                        urlPart = urlPart.substr(urlPrefixToSkipInEncoding.length + 1);
+                        isUrlPrefixPartPresent = true;
+                    }
+                }
+                MsgUtil.hecrp(urlPart).then(function (encUrl) {
+                    var finalUrlToUse = urlObj.origin;
+                    if (isUrlPrefixPartPresent) {
+                        finalUrlToUse += "/" + urlPrefixToSkipInEncoding;
+                    }
+                    finalUrlToUse += '/' + encUrl + "?fuete=1";
+                    xmlhttp.open(method, finalUrlToUse, async);
+                    accept();
+                });
+            }
+            else {
+                urlPart = url;
+                if (urlPrefixToSkipInEncoding != null && urlPrefixToSkipInEncoding != "") {
+                    if (urlPart.startsWith(urlPrefixToSkipInEncoding)) {
+                        urlPart = urlPart.substr(urlPrefixToSkipInEncoding.length);
+                        isUrlPrefixPartPresent = true;
+                    }
+                    else if (urlPart.startsWith("/" + urlPrefixToSkipInEncoding)) {
+                        urlPart = urlPart.substr(urlPrefixToSkipInEncoding.length + 1);
+                        isUrlPrefixPartPresent = true;
+                    }
+                }
+                MsgUtil.hecrp(urlPart).then(function (encUrl) {
+                    var finalUrlToUse = "";
+                    if (isUrlPrefixPartPresent) {
+                        finalUrlToUse += "/" + urlPrefixToSkipInEncoding;
+                    }
+                    finalUrlToUse += '/' + encUrl + "?fuete=1";
+                    xmlhttp.open(method, finalUrlToUse, async);
+                    accept();
+                });
+            }
+        });
+    }
+    else {
+        xmlhttp.open(method, url, async);
+    }
+    if (data) {
+        if (enableETE) {
+            MsgUtil.ecrp(data).then(function (encReq) {
+                data = encReq;
+                urlPromise.then(function () {
+                    if (enableETE) {
+                        xmlhttp.setRequestHeader("fbete", "1");
+                    }
+                    xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xmlhttp.send(data);
+                });
+            });
+        }
+        else {
+            urlPromise.then(function () {
+                if (enableETE) {
+                    xmlhttp.setRequestHeader("fbete", "1");
+                }
+                xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xmlhttp.send(data);
+            });
+        }
+    }
+    else {
+        urlPromise.then(function () {
+            if (enableETE) {
+                xmlhttp.setRequestHeader("fbete", "1");
+            }
+            xmlhttp.send();
+        });
+    }
+}
+
+function isUrlAbsolute(url) {
+    if (url.indexOf('//') === 0) { return true; } // URL is protocol-relative (= absolute)
+    if (url.indexOf('://') === -1) { return false; } // URL has no protocol (= relative)
+    if (url.indexOf('.') === -1) { return false; } // URL does not contain a dot, i.e. no TLD (= relative, possibly REST)
+    if (url.indexOf('/') === -1) { return false; } // URL does not contain a single slash (= relative)
+    if (url.indexOf(':') > url.indexOf('/')) { return false; } // The first colon comes after the first slash (= relative)
+    if (url.indexOf('://') < url.indexOf('.')) { return true; } // Protocol is defined before first dot (= absolute)
+    return false; // Anything else must be relative
+}
+
+function uriEncode(input) {
+    return encodeURI(input);
+}
+
+function uriDecode(input) {
+    try {
+        return decodeURI(input);
+    } catch (e) {
+        return input;
+    }
+}
+
+function preconnect(href) {
+    let preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = href;
+    document.getElementsByTagName('head')[0].appendChild(preconnect);
+}
+
+BLDR.checkTestUser = function (email) {
+    var systemIpAddress = BLDR.countryDetails && BLDR.countryDetails.ip ? BLDR.countryDetails.ip : "";
+    var yopmailRegix = /@yopmail.com\s*$/;
+    if (yopmailRegix.test(email) || (window.BLDR.testUserIp && window.BLDR.testUserIp.length > 0 && window.BLDR.testUserIp.indexOf(systemIpAddress) !== -1)) {
+        BLDR.createCookie('testuser', true);
+    }
+};
+
+window.addEventListener("load", function () {
+    BLDR.pageLoaded = true;
+});
+
+function isFetchDataFromCache() {
+    var fromcache = window.BLDR.getQueryString('fromcache');
+    if (fromcache && fromcache.toUpperCase() === 'FALSE')
+        return false;
+    return true;
+}
+
+function handlePostProcessing() {
+    const c_ext = BLDR.CultureCD && BLDR.CultureCD !== 'en' && BLDR.CountrySlug ? `_${BLDR.CountrySlug}` : '';
+    var eventParamsData = {
+        'MuCfg': { 'enableWebVitals': true },
+        C_vId: `_snt${c_ext}`, C_vTmpId: `_snsd${c_ext}`, C_vsId: `_sntd${c_ext}`, C_lgnId: (BLDR.hasUsrInfCookie() ? 'userinf' : 'UserStatus')
+    };
+    InitializeMetricsForPage(BLDR.PortalSettings.ConfigurePortalCd, BLDR.PortalSettings.ConfigureProductCd, eventParamsData);
+    BLDR.formatUserStatusCookie();
+    BLDR.CreateGCaptchaCookie(true);
+    if (window.BLDR.featureSets.ReduceBuilderExits === false && !BLDR.isEUPortal) {
+        if (BLDR.zendeskChat) {
+            loadZendeskChat();
+        } else {
+            loadFreshChat();
+        }
+    }
+
+    document.title = BLDR.Localization.document_title;
+
+    if (BLDR.isBaseRoute) {
+        window.BLDR.delete_cookie("DocumentID", window.BLDR.Portal.cookieDomain);
+    }
+    BLDR.loadJs("https://www.google.com/recaptcha/api.js?render=explicit" + (BLDR.CultureCD ? "&hl=" + BLDR.CultureCD : ""), true);
+    BLDR.loadSkinFiles();
+    addExperimentsLocalizedText();
+    var bundleUrl = BLDR.CDNHost + BLDR.CDNpathname + "/build/main.bundle-" + versionNumber + ".js";
+    BLDR.loadJs(bundleUrl, true); // load react main bundle asyn
+    BLDR.addScreenShotTrackers = (BLDR.IsMobileDevice() || BLDR.isIPAD()) ? false : true;
+    if (window.BLDR.pageLoaded) {
+        if (reqAccountsGuestUserCreation == false && isHandlePostPageLoadCalled == false) {
+            handlePostPageLoad();
+        }
+    }
+    else {
+        var pageLoadTimer = setInterval(function () {
+            if (window.BLDR.pageLoaded) {
+                clearInterval(pageLoadTimer);
+                if (reqAccountsGuestUserCreation == false && isHandlePostPageLoadCalled == false) {
+                    handlePostPageLoad();
+                }
+            }
+        }, 100);
+    }
+
+
+}
+
+function configCall() {
+    return new Promise(function (resolve, reject) {
+        callAjax(getConfigUrl(), 'GET', true, false, false, false, handleConfig, resolve);
+    });
+}
+
+async function resourcesCall() {
+    let url = await getLocalizationUrl();
+    return new Promise(function (resolve, reject) {
+        callAjax(url, 'GET', true, false, false, false, handleLocalizationText, resolve, undefined);
+    });
+}
+
+function setParsedDocObject() {
+    return new Promise(function (resolve, reject) {
+        let flowType = BLDR.getQueryString("flow");
+        let parseDocObjValue = sessionStorage.getItem("parseDocObj");
+        if (flowType && flowType.toLowerCase() === 'parsedoc' &&
+            parseDocObjValue && parseDocObjValue != null) {
+            try {
+                BLDR.parseDocObject = { "loaded": false, "data": null };
+                let isParseDocValueIsJson = BLDR.checkStringIsJson(parseDocObjValue)
+                if (isParseDocValueIsJson) {
+                    //Kept this code for old users, whom parsedDocObj exist in sessionstorage, Remove this IF block after some time 
+                    let parseDocObj = parseDocObjValue ? JSON.parse(parseDocObjValue || JSON.stringify('')) : {};
+                    BLDR.parseDocObject = { "loaded": true, "data": parseDocObj };
+                    if (flowType && flowType.toLowerCase() === 'parsedoc' &&
+                        parseDocObj && parseDocObj != '' && Object.keys(parseDocObj).length > 0) {
+                        sessionStorage.setItem("WP_FLOW_TYPE", flowType);
+                    }
+                    resolve("JsonfromSession");
+                }
+                else {
+                    parseDocObjValue = JSON.parse(parseDocObjValue);
+                    try {
+                        fetch(parseDocObjValue, {
+                            method: 'GET'
+                        }).then(function (response) { return response.json(); })
+                            .then(function (json) {
+                                let parseDocObj = json ? json : {};
+                                BLDR.parseDocObject = { "loaded": true, "data": parseDocObj };
+                                if (flowType && flowType.toLowerCase() === 'parsedoc' &&
+                                    parseDocObj && parseDocObj != '' && Object.keys(parseDocObj).length > 0) {
+                                    sessionStorage.setItem("WP_FLOW_TYPE", flowType);
+                                }
+                                resolve("Jsonfromfile");
+                            }).catch(e => {
+                                resolve("Jsonfromfile with error");
+                            })
+
+
+                    } catch {
+                        resolve("Jsonfromfile with error");
+                    }
+                }
+            }
+            catch {
+                BLDR.parseDocObject = { "loaded": false, "data": null };
+                sessionStorage.removeItem("WP_FLOW_TYPE");
+                sessionStorage.removeItem("parseDocObj");
+                resolve("error");
+            }
+
+        }
+        else {
+            sessionStorage.removeItem("WP_FLOW_TYPE");
+            sessionStorage.removeItem("parseDocObj");
+            resolve("NoParseDocObj");
+        }
+    });
+
+}
+
+function getCountries() {
+    callAjax(`${window.globalCompVars.BaseApiUrl}country/countrylist${(BLDR.isEUPortal ? ("?accept_language=" + BLDR.cultureCD) : "")}`, 'GET', true, window.globalCompVars.EnableETEEncryption, window.globalCompVars.EnableUrlETEEncryption, true, handleCountryResponse, undefined, undefined);
+}
+
+BLDR.dataHandler = function (targUrl, isReplace = false) {
+    if (isReplace)
+        window.location.replace = `${BLDR.Paths.rootURL}/click/users/datahandler?redirectUrl=${targUrl}`;
+    else
+        window.location.href = `${BLDR.Paths.rootURL}/click/users/datahandler?redirectUrl=${targUrl}`;
+}
+
+loadPortalSpecificItems();
+configCall()
+    .then(() => resourcesCall())
+    .then(() => setParsedDocObject())
+    .then(() => handlePostProcessing())
+
+    .catch(error => {
+        console.error('An error occurred:', error);
+    });

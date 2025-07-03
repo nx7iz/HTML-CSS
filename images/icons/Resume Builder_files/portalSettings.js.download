@@ -1,0 +1,414 @@
+
+/* eslint-disable */
+let directoryPath = '/blobcontent/@@portalCd/rbg/resources/@@env';
+const availableCultures = new Set(["en-US", "en-GB", "fr-FR","fr-GB", "de-DE", "it-IT", "es-ES","pl-PL"]);
+const blackListedURLsSet = new Set([]); // blacklist checking.
+
+const portalConfig = [
+  {
+    Key: "cvgenius-com-es",
+    portalCd: "ges",
+    isGES: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "ES",
+    defaultCultureCd: "es-ES",
+    localizationFileName: "es-ES.json",
+    cssBundleName: "ges-app",
+    startPage: "/primeros-pasos",
+    startHTSPage: "/como-empezar",
+    countriesToBeOnTop : ["ES"],
+    coreJSUrl : "/es/assets/gtwy/per/common.js",
+    clientCD : "CVGES"
+  },
+  {
+    Key: "cvgenius-com-it",
+    portalCd: "git",
+    isGIT: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "IT",
+    defaultCultureCd: "it-IT",
+    localizationFileName: "it-IT.json",
+    cssBundleName: "git-app",
+    startPage: "/inizia",
+    startHTSPage: "/come-iniziare",
+    countriesToBeOnTop : ["IT"],
+    coreJSUrl : "/it/assets/gtwy/per/common.js",
+    clientCD : "CVGIT"
+  },
+  {
+    Key: "cvgenius-com-de",
+    portalCd: "gde",
+    isGDE: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "DE",
+    defaultCultureCd: "de-DE",
+    localizationFileName: "de-DE.json",
+    cssBundleName: "gde-app",
+    startPage: "/loslegen",
+    startHTSPage: "/beginnen-anleitung",
+    countriesToBeOnTop : ["DE"],
+    coreJSUrl : "/de/assets/gtwy/per/common.js",
+    clientCD : "CVGDE"
+  },
+  {
+    Key: "cvgenius-com-uk",
+    portalCd: "cvg",
+    isCVG: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "GB",
+    defaultCultureCd: "en-GB",
+    localizationFileName: "en-GB.json",
+    cssBundleName: "cvg-app",
+    startPage: "/getting-started",
+    startHTSPage: "/how-to-start",
+    experimentJsUrl : "/cdn-experimentation/cvg/test-spa.js",
+    useExperimentProfile: true,
+    countriesToBeOnTop : ["GB", "UK","IE"],
+    coreJSUrl : "/uk/assets/gtwy/per/common.js",
+    clientCD : "CVGUK"
+  },
+  {
+    Key: "cvgenius-com-fr",
+    portalCd: "gfr",
+    isGFR: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "FR",
+    defaultCultureCd: "fr-FR",
+    localizationFileName: "fr-FR.json",
+    cssBundleName: "gfr-app",
+    startPage: "/se-lancer",
+    startHTSPage: "/comment-se-lancer",
+    experimentJsUrl : "/cdn-experimentation/gfr/test-spa.js",
+    useExperimentProfile: true,
+    countriesToBeOnTop : ["FR"],
+    coreJSUrl : "/fr/assets/gtwy/per/common.js",
+    clientCD : "CVGFR"
+  },
+  {
+    Key: "cvgenius-com-pl",
+    portalCd: "gpl",
+    isGPL: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "PL",
+    defaultCultureCd: "pl-PL",
+    localizationFileName: "pl-PL.json",
+    cssBundleName: "gpl-app",
+    startPage: "/pierwsze-kroki",
+    startHTSPage: "/jak-zaczac",
+    countriesToBeOnTop : ["PL"],
+    coreJSUrl : "/pl/assets/gtwy/per/common.js",
+    clientCD : "CVGPL"
+  },
+  {
+    Key: "cvgenius-com",
+    portalCd: "cvg",
+    isCVG: true,
+    isValidLongLoaderCase: false,
+    isLite: true,
+    defaultCountryCD: "GB",
+    defaultCultureCd: "en-GB",
+    cssBundleName: "cvg-app",
+    startPage: "/getting-started",
+    startHTSPage: "/how-to-start",
+    countriesToBeOnTop : ["GB", "UK","IE"],
+    coreJSUrl : "/assets/gtwy/per/common.js",
+    clientCD : "CVGUK"
+  },
+  {
+    Key: "resumegenius-com",
+    portalCd: "rgn",
+    isRG: true,
+    isValidLongLoaderCase: true,
+    isLite: false,
+    defaultCountryCD: "US",
+    defaultCultureCd: "en-US",
+    cssBundleName: "rgn-app",
+    startPage: "/getting-started",
+    startHTSPage: "/how-to-start",
+    cdnexperimentJsUrl :"/cdn-experimentation/cdn/test-sync.min.js",
+    experimentJsUrl : "/cdn-experimentation/rgn/test-spa.js",
+    useExperimentProfile: true,
+    loadGoogleAccountJs: true,
+    countriesToBeOnTop : ["US", "CA", "GB", "AU"],
+    coreJSUrl : "/assets/gtwy/per/common.js",
+    clientCD : "RSMGN"
+  },
+  {
+    Key: "resumegenius-co",
+    portalCd: "rgn",
+    isRG: true,
+    isValidLongLoaderCase: true,
+    isLite: false,
+    defaultCountryCD: "US",
+    defaultCultureCd: "en-US",
+    cssBundleName: "rgn-app",
+    startPage: "/getting-started",
+    startHTSPage: "/how-to-start",
+    experimentJsUrl : "/cdn-experimentation/rgn/test-spa.js",
+    loadGoogleAccountJs: true,
+    useExperimentProfile: true,
+    countriesToBeOnTop : ["US", "CA", "GB", "AU"],
+    coreJSUrl : "/assets/gtwy/per/common.js",
+    clientCD : "RSMGN"
+  },
+  {
+    Key: "resumecompanion-com",
+    portalCd: "rcp",
+    isRC: true,
+    isValidLongLoaderCase: true,
+    isLite: false,
+    defaultCountryCD: "US",
+    defaultCultureCd: "en-US",
+    cssBundleName: "rcp-app",
+    startPage: "/getting-started",
+    startHTSPage: "/how-to-start",
+    countriesToBeOnTop : ["US", "CA", "GB", "AU"],
+    coreJSUrl : "/assets/gtwy/per/common.js",
+    clientCD : "RSMCP"
+  }
+];
+
+function getPortalSettings() {
+  const countryCD = getCountryCodeFromUrl();
+  const parts = window.location.hostname.split('.');
+  const domain = parts.slice(-2).join('-');
+  let key = countryCD ? `${domain}-${countryCD}` : domain;
+  let portalSetting = portalConfig.find(e => e.Key === key);
+
+  if(!portalSetting && domain.includes("cvgenius-com")){
+    key= `${domain}-uk`;
+    portalSetting = portalConfig.find(e => e.Key === key);
+  }
+  return portalSetting;
+}
+
+function getCountryCodeFromUrl() {
+  const rawURLPath = window.location.href.replace(/\/\//g, '/');
+  const languageCodePattern = /\/([a-z]{2})\//;
+  const segments = rawURLPath.match(languageCodePattern);
+  return segments && !isSegmentBlacklisted(segments[1].trim()) ? segments[1].trim() : '';
+}
+
+async function CheckIfResourceFilePresentForCulture(filePath) {
+  try {
+    const response = await fetch(filePath);
+    return response.status === 200;
+  } catch (error) {
+    return false;
+  }
+}
+
+function CheckIfCultureCDPresentInList(cultureCD) {
+     return availableCultures.has(cultureCD);
+   }
+
+function isSegmentBlacklisted(segment) {
+  return blackListedURLsSet.has(segment);
+}
+
+function getCountryAndLanguageFromURL() {
+     let language = "";
+     let country = getCountryCodeFromUrl(); // Default to country from URL
+     const rawURLPath = window.location.href.replace(/\/\//g, '/');
+     const languageAndCountryCodePattern = /\/([a-z]{2})\/([a-z]{2})\//;
+     const segments = rawURLPath.match(languageAndCountryCodePattern);
+     if (segments && segments.length === 3 && !isSegmentBlacklisted(segments[2].trim())) {
+       language = segments[2].trim();
+     }
+     return { country, language };
+}
+   
+async function getLiteCulture() {
+  let portalSetting = getPortalSettings();
+  if (portalSetting.isLite) {
+    const defaultCultureCd = portalSetting.defaultCultureCd;
+    const userBrowserLanguages = navigator.languages;
+    const cultureObj = getCountryAndLanguageFromURL();
+    let liteObj = {
+      currentCultureCD: defaultCultureCd,
+      countryCD: cultureObj.country,
+      localizationFileName: portalSetting.localizationFileName,
+      languageCD: "",
+    };
+
+    directoryPath = directoryPath
+      .replace('@@portalCd', portalSetting.portalCd)
+      .replace('@@env', getEnvironment());
+
+    if (cultureObj.country && cultureObj.language) {
+      const countryCD =
+        (portalSetting.defaultCountryCD && portalSetting.defaultCountryCD.trim()) !== cultureObj.country.toUpperCase()
+          ? portalSetting.defaultCountryCD.trim()
+          : cultureObj.country.toUpperCase();
+      const cultureCD = `${cultureObj.language.toLowerCase()}-${countryCD}`;
+      const fileName = `${cultureCD}.json`;
+      const filePath = `${directoryPath}/${fileName}`;
+      if (CheckIfCultureCDPresentInList(cultureCD) || (await CheckIfResourceFilePresentForCulture(filePath))) {
+        liteObj.currentCultureCD = cultureCD;
+        liteObj.countryCD = cultureObj.country;
+        liteObj.languageCD = cultureObj.language.toLowerCase();
+        liteObj.localizationFileName = fileName;
+      }
+    } else if (cultureObj.country && !cultureObj.language) {
+      const fileName = liteObj.localizationFileName || `${defaultCultureCd}.json`;
+      const filePath = `${directoryPath}/${fileName}`;
+      if (CheckIfCultureCDPresentInList(defaultCultureCd) || (await CheckIfResourceFilePresentForCulture(filePath))) {
+        liteObj.currentCultureCD = defaultCultureCd;
+        liteObj.countryCD = cultureObj.country;
+        liteObj.languageCD = cultureObj.language.toLowerCase();
+        liteObj.localizationFileName = fileName;
+      }
+    } else if (userBrowserLanguages && userBrowserLanguages.length > 0) {
+      for (let i = 0; i < userBrowserLanguages.length; i++) {
+        const cultureArr = userBrowserLanguages[i].split(';')[0];
+        const fileName = `${cultureArr}.json`;
+        const filePath = `${directoryPath}/${fileName}`;
+        if (CheckIfCultureCDPresentInList(cultureArr) || (await CheckIfResourceFilePresentForCulture(filePath))) {
+          liteObj.currentCultureCD = cultureArr;
+          let array = cultureArr.split('-');
+          liteObj.countryCD = array[1];
+          liteObj.languageCD = array[0].toLowerCase();
+          liteObj.localizationFileName = fileName;
+          break;
+        } else {
+          const browserLanguage = cultureArr.split('-')[0];
+          const fileName = `${browserLanguage}.json`;
+          const filePath = `${directoryPath}/${fileName}`;
+          if (CheckIfCultureCDPresentInList(browserLanguage) || (await CheckIfResourceFilePresentForCulture(filePath))) {
+            liteObj.currentCultureCD = browserLanguage;
+            liteObj.localizationFileName = fileName;
+            break;
+          }
+        }
+      }
+    }
+    portalSetting = { ...portalSetting, ...liteObj };
+  }
+  else{
+    let cultureObj = {
+      currentCultureCD: portalSetting.defaultCultureCd,
+      defaultCountryCode: portalSetting.defaultCountryCD,
+      languageCD: "",
+    };
+    portalSetting = { ...portalSetting, ...cultureObj };
+  }
+  return portalSetting;
+}
+
+
+function handlePortalConfiguration(data) {
+    
+  BLDR.cultureCD = data.currentCultureCD;
+  BLDR.defaultCountryCode = data.defaultCountryCD;
+  if(data.isLite){
+    if (data.countryCD && data.languageCD)
+    BLDR.CountryCultureSlugPrefix = "/" + data.countryCD + "/" + data.languageCD;
+    else
+    BLDR.CountryCultureSlugPrefix = data.countryCD ? "/" + data.countryCD : ""
+    
+    BLDR.CountrySlug = data.countryCD;
+    BLDR.IsLitePortalFlow = BLDR.isLite = data.isLite;
+    BLDR.liteFlowCultureCD = data.currentCultureCD ? data.currentCultureCD : data.defaultCultureCd;
+    BLDR.CultureCD = BLDR.cultureCD.split("-")[0];
+    BLDR.localizationFileName = data.localizationFileName;
+    delete data.languageCD;
+
+  }
+  
+  BLDR.isRG = data.isRG;
+  BLDR.isCVG = data.isCVG;
+  BLDR.isRC = data.isRC;
+  BLDR.isGFR = data.isGFR;
+  BLDR.isGPL = data.isGPL;
+  BLDR.isGDE = data.isGDE;
+  BLDR.isGIT = data.isGIT;
+  BLDR.isGES = data.isGES;
+  BLDR.isEUPortal = BLDR.isLite && !BLDR.isCVG;
+
+  delete data.defaultCountryCode;
+  delete data.currentCultureCD;
+  delete data.countryCD;
+  
+  BLDR.Portal = data;
+  BLDR.countriesToBeOnTop = data.countriesToBeOnTop;
+}
+
+function setCoreJSProductName(data) {
+  var environment = window.location.host.split('.')[0];
+  var configName = "_qua";
+  BLDR.isLowerEnvironment = false;
+  switch (environment) {
+      case "loc":
+      case "reg":
+      case "reg-sep":
+      case "pen":
+      case "perf":
+          configName = "_reg";
+          BLDR.isLowerEnvironment = true;
+          break;
+      case "stg":
+      case "stg-sep":
+      case "resumegenius":
+      case "resumecompanion":
+      case "cvgenius":
+      case "sep":
+          configName = "_prd";
+          break;
+      case "local":
+      case "local-sep":
+      case "pseudo":
+      case "qa":
+         configName = "_qua";
+         BLDR.isLowerEnvironment = true;
+  }
+  let portalIdentifier = data.isRG || data.isRC ? data.clientCD && data.clientCD.toLowerCase() : data.portalCd && data.portalCd.toLowerCase();
+  let coreJS_Product_Name = portalIdentifier + configName + '_w_cor#bld';
+  // PS Object is needed for Core JS Integration
+  window.PS = window.PS || {};
+  var PS = window.PS;
+  PS.EnableEncryption = true;
+  PS.COREJS_PRODUCT_NAME = coreJS_Product_Name;
+  window.globalCompVars = window.globalCompVars || {};
+  window.globalCompVars.urlPrefixToSkipInEncoding = BLDR.CountrySlug ? BLDR.CountrySlug + "/" + 'gtwy' : 'gtwy';
+  return coreJS_Product_Name;
+}
+
+function getEnvironment() {
+  var environment = window.location.host.split('.')[0];
+  switch (environment) {
+      case "perf":
+        environment = "reg";
+          break;
+      case "resumegenius":
+      case "resumecompanion":
+      case "cvgenius":
+        environment = "prod";
+          break;
+      case "local":
+        environment = "qa";
+      break;
+  }
+  return environment;
+}
+
+window.initializeSettings = function(callback){ 
+  getLiteCulture().then((data) => {
+    handlePortalConfiguration(data);
+    setCoreJSProductName(data);
+    callback();
+  })
+  .catch((error) => {
+      console.log("Rejected:", error);
+  });
+};
+
+
+
+
+
