@@ -15,16 +15,38 @@
       margin-bottom: 0;
     }
 
-    body {
-      margin: 0;
+    div {
+      font-family: Roboto, Arial;
     }
 
-    .thumbnail {
-      width: 100%;
+    body {
+      margin: 0;
+      padding-top: 80px;
+      padding-left: 95px;
+      background-color: rgb(248, 248, 248);
     }
 
     .thumbnail-row {
       margin-bottom: 12px;
+      position: relative;
+    }
+
+    .thumbnail {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .video-time {
+      background-color: rgba(0, 0, 0, 1);
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+
+      padding: 4px;
+      border-radius: 2px;
+      position: absolute;
+      bottom: 10px;
+      right: 4px;
     }
 
     .video-title {
@@ -32,6 +54,8 @@
       font-weight: 500;
       line-height: 20px;
       margin-bottom: 12px;
+
+      cursor: pointer;
     }
 
     .video-author,
@@ -43,6 +67,7 @@
 
     .video-author {
       margin-bottom: 6px;
+      cursor: pointer;
     }
 
     .video-preview {}
@@ -56,6 +81,8 @@
     .profile-picture {
       width: 38px;
       border-radius: 25px;
+
+      cursor: pointer;
     }
 
     .video-grid {
@@ -66,12 +93,24 @@
     }
 
     .header {
+      background-color: white;
       height: 55px;
 
       display: flex;
       flex-direction: row;
       justify-content: space-between;
-      /* align-items: center; */
+
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      border-bottom-color: rgb(226, 226, 226);
+
+      z-index: 100;
+
     }
 
     .left-section {
@@ -174,6 +213,54 @@
       height: 33px;
       border-radius: 18px;
     }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      /* align-items: center; */
+      /* justify-content: space-between; */
+
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      top: 55px;
+      width: 72px;
+
+      background-color: white;
+    }
+
+    .home-icon {
+      height: 28px;
+    }
+
+    .home {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: black;
+      font-size: 10px;
+      height: 74px;
+    }
+
+    .explore-icon {
+      height: 28px;
+    }
+
+    .subscriptions-icon {
+      height: 28px;
+    }
+
+    .originals-icon {
+      height: 28px;
+    }
+
+    .youtube-music-icon {
+      height: 28px;
+    }
+
+    .library-icon {
+      height: 28px;
+    }
   </style>
 </head>
 
@@ -203,11 +290,40 @@
     </div>
   </div>
 
+
+  <div class="sidebar">
+    <div class="home">
+      <img class="home-icon" src="/images/icons/home.svg" alt="">
+      <div>Home</div>
+    </div>
+    <div class="home">
+      <img class="explore-icon" src="/images/icons/explore.svg" alt="">
+      <div>Explore</div>
+    </div>
+    <div class="home">
+      <img class="subscriptions-icon" src="/images/icons/subscriptions.svg" alt="">
+      <div>Subscriptions</div>
+    </div>
+    <div class="home">
+      <img class="originals-icon" src="/images/icons/originals.svg" alt="">
+      <div>Originals</div>
+    </div>
+    <div class="home">
+      <img class="youtube-music-icon" src="/images/icons/youtube-music.svg" alt="">
+      <div>Youtube music</div>
+    </div>
+    <div class="home">
+      <img class="library-icon" src="/images/icons/library.svg" alt="">
+      <div>Library</div>
+    </div>
+  </div>
+
   <div class="video-grid">
 
     <div class="video-preview">
       <div class="thumbnail-row">
         <img class="thumbnail" src="images/pic 01.webp" alt="">
+        <div class="video-time">14:20</div>
       </div>
       <div class="video-info-grid">
         <div class="channel-picture">
@@ -224,10 +340,12 @@
     <div class="video-preview">
       <div class="thumbnail-row">
         <img class="thumbnail" src="images/pic 02.webp" alt="">
+        <div class="video-time">8:22</div>
       </div>
       <div class="video-info-grid">
         <div class="channel-picture">
           <img class="profile-picture" src="/images/channel-2.jpeg" alt="">
+
         </div>
         <div class="video-info">
           <p class="video-title">Try Not To Laugh Challenge #9</p>
@@ -240,6 +358,7 @@
     <div class="video-preview">
       <div class="thumbnail-row">
         <img class="thumbnail" src="images/pic 01.webp" alt="">
+        <div class="video-time">14:20</div>
       </div>
       <div class="video-info-grid">
         <div class="channel-picture">

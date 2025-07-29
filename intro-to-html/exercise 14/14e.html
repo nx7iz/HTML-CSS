@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      height: 1000px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .left-section {
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+    }
+
+    .profile-picture {
+      height: 40px;
+      border-radius: 25px;
+      margin-right: 10px;
+    }
+
+    .name {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .add-friend,
+    .message {
+      height: 35px;
+      padding-left: 18px;
+      padding-right: 18px;
+      border-radius: 4px;
+      border: none;
+      font-weight: bold;
+    }
+
+    .add-friend {
+      background-color: rgb(24, 119, 242);
+      color: white;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="left-section">
+      <img class="profile-picture" src="/images/Stork.jpg" alt="">
+      <div class="name">Stark</div>
+    </div>
+    <div class="right-section">
+      <button class="add-friend">Add Friend</button>
+      <button class="message">Message</button>
+    </div>
+  </div>
+</body>
+
+</html>
