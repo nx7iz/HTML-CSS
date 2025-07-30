@@ -22,12 +22,13 @@
     body {
       margin: 0;
       padding-top: 80px;
-      padding-left: 95px;
+      padding-left: 96px;
+      padding-right: 24px;
       background-color: rgb(248, 248, 248);
     }
 
     .thumbnail-row {
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       position: relative;
     }
 
@@ -39,13 +40,17 @@
     .video-time {
       background-color: rgba(0, 0, 0, 1);
       color: white;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 500;
 
-      padding: 4px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      padding-left: 4px;
+      padding-right: 4px;
+
       border-radius: 2px;
       position: absolute;
-      bottom: 10px;
+      bottom: 10.5px;
       right: 4px;
     }
 
@@ -53,33 +58,30 @@
       font-size: 14px;
       font-weight: 500;
       line-height: 20px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
 
       cursor: pointer;
     }
 
     .video-author,
     .video-stats {
-      font-size: 13px;
+      font-size: 12px;
       color: rgb(96, 96, 96);
 
     }
 
     .video-author {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       cursor: pointer;
     }
 
-    .video-preview {}
-
-
     .video-info-grid {
       display: grid;
-      grid-template-columns: 50px 1fr;
+      grid-template-columns: 48px 1fr;
     }
 
     .profile-picture {
-      width: 38px;
+      width: 36px;
       border-radius: 25px;
 
       cursor: pointer;
@@ -94,10 +96,11 @@
 
     .header {
       background-color: white;
-      height: 55px;
+      height: 56px;
 
       display: flex;
       flex-direction: row;
+      /* align-items: center; */
       justify-content: space-between;
 
       position: fixed;
@@ -165,17 +168,61 @@
       border-width: 1px;
       border-style: solid;
       border-color: rgb(192, 192, 192);
-      /* box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.05); */
       margin-left: -1px;
       margin-right: 8px;
+
+    }
+
+    .search-button,
+    .voice-search-button,
+    .notifications-icon-container,
+    .upload,
+    .youtube-apps {
+      display: flex;
+      position: relative;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .search-button .tooltip,
+    .voice-search-button .tooltip,
+    .notifications-icon-container .tooltip,
+    .youtube-apps .tooltip,
+    .upload .tooltip {
+      font-family: Roboto, Arial;
+      background-color: rgb(132, 132, 132);
+      color: white;
+      font-size: 12px;
+
+      position: absolute;
+      bottom: -30px;
+
+      padding-top: 4px;
+      padding-bottom: 4px;
+      padding-left: 8px;
+      padding-right: 8px;
+      border-radius: 2px;
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .search-button:hover .tooltip,
+    .voice-search-button:hover .tooltip,
+    .notifications-icon-container:hover .tooltip,
+    .youtube-apps:hover .tooltip,
+    .upload:hover .tooltip  {
+      opacity: 1;
     }
 
     .search-icon {
       height: 24px;
-      margin-top: 5px;
+
     }
 
     .voice-search-button {
+      position: relative;
       height: 40px;
       width: 40px;
       border-radius: 20px;
@@ -185,7 +232,7 @@
 
     .voice-search-icon {
       height: 24px;
-      margin-top: 5px;
+
     }
 
     .right-section {
@@ -209,16 +256,34 @@
       height: 24px;
     }
 
+    .notifications-count {
+      background-color: rgb(202, 0, 0);
+      color: white;
+      position: absolute;
+      font-size: 11px;
+
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-top: 2px;
+      padding-bottom: 2px;
+
+      border-radius: 10px;
+      top: -2px;
+      right: -5px;
+    }
+
     .current-user-picture {
       height: 33px;
       border-radius: 18px;
     }
 
     .sidebar {
+      background-color: white;
+
       display: flex;
       flex-direction: column;
-      /* align-items: center; */
-      /* justify-content: space-between; */
+      /* align-items: center;
+      justify-content: space-evenly; */
 
       position: fixed;
       left: 0;
@@ -226,40 +291,31 @@
       top: 55px;
       width: 72px;
 
-      background-color: white;
+      padding-top: 5px;
+      z-index: 200;
     }
 
-    .home-icon {
-      height: 28px;
-    }
-
-    .home {
+    .sidebar-link {
+      height: 74px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      color: black;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .sidebar-link img {
+      margin-bottom: 6px;
+      height: 24px;
+    }
+
+    .sidebar-link div {
       font-size: 10px;
-      height: 74px;
     }
 
-    .explore-icon {
-      height: 28px;
-    }
-
-    .subscriptions-icon {
-      height: 28px;
-    }
-
-    .originals-icon {
-      height: 28px;
-    }
-
-    .youtube-music-icon {
-      height: 28px;
-    }
-
-    .library-icon {
-      height: 28px;
+    .sidebar-link:hover {
+      background-color: rgb(227, 226, 226);
     }
   </style>
 </head>
@@ -276,43 +332,55 @@
       <input class="search-bar" type="text" placeholder="Search">
       <button class="search-button">
         <img class="search-icon" src="/images/icons/search.svg" alt="">
+        <div class="tooltip">search</div>
       </button>
       <button class="voice-search-button">
         <img class="voice-search-icon" src="/images/icons/voice-search-icon.svg" alt="">
+        <div class="tooltip">Search with your voice</div>
       </button>
     </div>
 
     <div class="right-section">
-      <img class="upload-icon" src="/images/icons/upload.svg" alt="">
-      <img class="youtube-apps-icon" src="/images/icons/youtube-apps.svg" alt="">
-      <img class="notifications-icon" src="/images/icons/notifications.svg" alt="">
+      <div class="upload">
+        <img class="upload-icon" src="/images/icons/upload.svg" alt="">
+        <div class="tooltip">Upload</div>
+      </div>
+      <div class="youtube-apps">
+        <img class="youtube-apps-icon" src="/images/icons/youtube-apps.svg" alt="">
+        <div class="tooltip">Youtube apps</div>
+      </div>
+      <div class="notifications-icon-container">
+        <img class="notifications-icon" src="/images/icons/notifications.svg" alt="">
+        <div class="notifications-count">3</div>
+        <div class="tooltip">Notifications</div>
+      </div>
       <img class="current-user-picture" src="/images/my-channel.jpeg" alt="">
     </div>
   </div>
 
 
   <div class="sidebar">
-    <div class="home">
+    <div class="sidebar-link">
       <img class="home-icon" src="/images/icons/home.svg" alt="">
       <div>Home</div>
     </div>
-    <div class="home">
+    <div class="sidebar-link">
       <img class="explore-icon" src="/images/icons/explore.svg" alt="">
       <div>Explore</div>
     </div>
-    <div class="home">
+    <div class="sidebar-link">
       <img class="subscriptions-icon" src="/images/icons/subscriptions.svg" alt="">
       <div>Subscriptions</div>
     </div>
-    <div class="home">
+    <div class="sidebar-link">
       <img class="originals-icon" src="/images/icons/originals.svg" alt="">
       <div>Originals</div>
     </div>
-    <div class="home">
+    <div class="sidebar-link">
       <img class="youtube-music-icon" src="/images/icons/youtube-music.svg" alt="">
       <div>Youtube music</div>
     </div>
-    <div class="home">
+    <div class="sidebar-link">
       <img class="library-icon" src="/images/icons/library.svg" alt="">
       <div>Library</div>
     </div>
@@ -349,7 +417,41 @@
         </div>
         <div class="video-info">
           <p class="video-title">Try Not To Laugh Challenge #9</p>
-          <p class="video-author">Markilpier</p>
+          <p class="video-author">Markiplier</p>
+          <p class="video-stats">19M views &#183 4 years ago</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="video-preview">
+      <div class="thumbnail-row">
+        <img class="thumbnail" src="images/pic 01.webp" alt="">
+        <div class="video-time">14:20</div>
+      </div>
+      <div class="video-info-grid">
+        <div class="channel-picture">
+          <img class="profile-picture" src="/images/channel-1 pfp.jpeg" alt="">
+        </div>
+        <div class="video-info">
+          <p class="video-title">Talking Tech and AI with Google CEO Sundar Pichai!</p>
+          <p class="video-author">Marques Brownlee</p>
+          <p class="video-stats">3.4M views &#183 6 months ago</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="video-preview">
+      <div class="thumbnail-row">
+        <img class="thumbnail" src="images/pic 02.webp" alt="">
+        <div class="video-time">8:22</div>
+      </div>
+      <div class="video-info-grid">
+        <div class="channel-picture">
+          <img class="profile-picture" src="/images/channel-2.jpeg" alt="">
+        </div>
+        <div class="video-info">
+          <p class="video-title">Try Not To Laugh Challenge #9</p>
+          <p class="video-author">Markiplier</p>
           <p class="video-stats">9M views &#183 4 years ago</p>
         </div>
       </div>
@@ -375,6 +477,7 @@
     <div class="video-preview">
       <div class="thumbnail-row">
         <img class="thumbnail" src="images/pic 02.webp" alt="">
+        <div class="video-time">8:22</div>
       </div>
       <div class="video-info-grid">
         <div class="channel-picture">
@@ -382,39 +485,7 @@
         </div>
         <div class="video-info">
           <p class="video-title">Try Not To Laugh Challenge #9</p>
-          <p class="video-author">Markilpier</p>
-          <p class="video-stats">9M views &#183 4 years ago</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="video-preview">
-      <div class="thumbnail-row">
-        <img class="thumbnail" src="images/pic 01.webp" alt="">
-      </div>
-      <div class="video-info-grid">
-        <div class="channel-picture">
-          <img class="profile-picture" src="/images/channel-1 pfp.jpeg" alt="">
-        </div>
-        <div class="video-info">
-          <p class="video-title">Talking Tech and AI with Google CEO Sundar Pichai!</p>
-          <p class="video-author">Marques Brownlee</p>
-          <p class="video-stats">3.4M views &#183 6 months ago</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="video-preview">
-      <div class="thumbnail-row">
-        <img class="thumbnail" src="images/pic 02.webp" alt="">
-      </div>
-      <div class="video-info-grid">
-        <div class="channel-picture">
-          <img class="profile-picture" src="/images/channel-2.jpeg" alt="">
-        </div>
-        <div class="video-info">
-          <p class="video-title">Try Not To Laugh Challenge #9</p>
-          <p class="video-author">Markilpier</p>
+          <p class="video-author">Markiplier</p>
           <p class="video-stats">9M views &#183 4 years ago</p>
         </div>
       </div>
