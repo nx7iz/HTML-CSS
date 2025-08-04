@@ -28,16 +28,32 @@
       <input class="search-bar" type="text" placeholder="Search">
       <button class="search-button">
         <img class="search-icon" src="/images/icons/search.svg" alt="">
+        <div class="tooltip">Search</div>
       </button>
       <button class="voice-search-button">
         <img class="voice-search-icon" src="/images/icons/voice-search-icon.svg" alt="">
+        <div class="tooltip">Search with your voice</div>
       </button>
     </div>
 
     <div class="right-section">
-      <img class="upload-icon" src="/images/icons/upload.svg" alt="">
-      <img class="youtube-apps-icon" src="/images/icons/youtube-apps.svg " alt="">
-      <img class="notifications-icon" src="/images/icons/notifications.svg" alt="">
+
+      <div class="upload">
+        <img class="upload-icon" src="/images/icons/upload.svg" alt="">
+        <div class="tooltip">Create</div>
+      </div>
+
+      <div class="youtube-apps">
+        <img class="youtube-apps-icon" src="/images/icons/youtube-apps.svg " alt="">
+        <div class="tooltip">YouTube apps</div>
+      </div>
+
+      <div class="notifications-icon-container">
+        <img class="notifications-icon" src="/images/icons/notifications.svg" alt="">
+        <div class="tooltip">Notifications</div>
+        <div class="notifications-count">3</div>
+      </div>
+
       <img class="profile-picture" src="/images/my-channel.jpeg" alt="">
     </div>
   </header>
@@ -81,8 +97,9 @@
     <section class="video-grid">
 
       <div class="video-container">
-        <div>
+        <div class="thumbnail-container">
           <img class="thumbnail" src="/images/pic 01.webp" alt="">
+          <div class="video-time">14:20</div>
         </div>
         <div class="video-content">
           <div class="channel-picture-container">
@@ -97,8 +114,9 @@
       </div>
 
       <div class="video-container">
-        <div>
+        <div class="thumbnail-container">
           <img class="thumbnail" src="/images/wallpaper 01.jpg" alt="">
+          <div class="video-time">8:28</div>
         </div>
         <div class="video-content">
           <div class="channel-picture-container">
@@ -113,8 +131,77 @@
       </div>
 
       <div class="video-container">
-        <div>
+        <div class="thumbnail-container">
+          <img class="thumbnail" src="/images/pic 02.webp" alt="">
+          <div class="video-time">11:09</div>
+        </div>
+        <div class="video-content">
+          <div class="channel-picture-container">
+            <img class="channel-picture" src="/images/channel-2.jpeg" alt="">
+          </div>
+          <div class="video-info">
+            <div class="video-title">Don't laugh Challenge #5</div>
+            <div class="video-author">Markiplier</div>
+            <div class="video-stats">4M views &#183 1 month ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <div class="thumbnail-container">
+          <img class="thumbnail" src="/images/Night City.jpg" alt="">
+          <div class="video-time">16:53</div>
+        </div>
+        <div class="video-content">
+          <div class="channel-picture-container">
+            <img class="channel-picture" src="/images/wallpaper 03.jpg" alt="">
+          </div>
+          <div class="video-info">
+            <div class="video-title">Stunning Night City night walk | 4K</div>
+            <div class="video-author">4K walking experience</div>
+            <div class="video-stats">7.2M views &#183 9 months ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <div class="thumbnail-container">
+          <img class="thumbnail" src="/images/Stork.jpg" alt="">
+          <div class="video-time">3:02</div>
+        </div>
+        <div class="video-content">
+          <div class="channel-picture-container">
+            <img class="channel-picture" src="/images/Himmel.jpg" alt="">
+          </div>
+          <div class="video-info">
+            <div class="video-title">Stork Lore</div>
+            <div class="video-author">Frieren</div>
+            <div class="video-stats">3.4M views &#183 6 months ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <div class="thumbnail-container">
+          <img class="thumbnail" src="/images/After-Llife.jpg" alt="">
+          <div class="video-time">8:28</div>
+        </div>
+        <div class="video-content">
+          <div class="channel-picture-container">
+            <img class="channel-picture" src="/images/wallpaper 02.jpg" alt="">
+          </div>
+          <div class="video-info">
+            <div class="video-title">CyberPunk 2077 | AfterLife</div>
+            <div class="video-author">Azekawa</div>
+            <div class="video-stats">12M views &#183 4 years ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <div class="thumbnail-container">
           <img class="thumbnail" src="/images/pic 01.webp" alt="">
+          <div class="video-time">14:20</div>
         </div>
         <div class="video-content">
           <div class="channel-picture-container">
@@ -129,71 +216,9 @@
       </div>
 
       <div class="video-container">
-        <div>
+        <div class="thumbnail-container">
           <img class="thumbnail" src="/images/wallpaper 01.jpg" alt="">
-        </div>
-        <div class="video-content">
-          <div class="channel-picture-container">
-            <img class="channel-picture" src="/images/wallpaper 05.jpg" alt="">
-          </div>
-          <div class="video-info">
-            <div class="video-title">Legendary fight between blood Kings</div>
-            <div class="video-author">Noble is not worthy</div>
-            <div class="video-stats">34M views &#183 2 years ago</div>
-          </div>
-        </div>
-      </div>
-      <div class="video-container">
-        <div>
-          <img class="thumbnail" src="/images/pic 01.webp" alt="">
-        </div>
-        <div class="video-content">
-          <div class="channel-picture-container">
-            <img class="channel-picture" src="/images/channel-1 pfp.jpeg" alt="">
-          </div>
-          <div class="video-info">
-            <div class="video-title">Talking Tech and AI with Google CEO Sundar Pichai!</div>
-            <div class="video-author">Marques Brownlee</div>
-            <div class="video-stats">3.4M views &#183 6 months ago</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="video-container">
-        <div>
-          <img class="thumbnail" src="/images/wallpaper 01.jpg" alt="">
-        </div>
-        <div class="video-content">
-          <div class="channel-picture-container">
-            <img class="channel-picture" src="/images/wallpaper 05.jpg" alt="">
-          </div>
-          <div class="video-info">
-            <div class="video-title">Legendary fight between blood Kings</div>
-            <div class="video-author">Noble is not worthy</div>
-            <div class="video-stats">34M views &#183 2 years ago</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="video-container">
-        <div>
-          <img class="thumbnail" src="/images/pic 01.webp" alt="">
-        </div>
-        <div class="video-content">
-          <div class="channel-picture-container">
-            <img class="channel-picture" src="/images/channel-1 pfp.jpeg" alt="">
-          </div>
-          <div class="video-info">
-            <div class="video-title">Talking Tech and AI with Google CEO Sundar Pichai!</div>
-            <div class="video-author">Marques Brownlee</div>
-            <div class="video-stats">3.4M views &#183 6 months ago</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="video-container">
-        <div>
-          <img class="thumbnail" src="/images/wallpaper 01.jpg" alt="">
+          <div class="video-time">8:28</div>
         </div>
         <div class="video-content">
           <div class="channel-picture-container">
